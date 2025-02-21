@@ -34,22 +34,24 @@ if uploaded_file:
     df = df.dropna(subset=["Date"])
 
     # Sidebar Filters
-    selected_date = st.sidebar.date_input("Select a Date", pd.to_datetime("today"))
+    selected_date = pd.to_datetime(st.sidebar.date_input("Select a Date", pd.to_datetime("today")))
     selected_employer = st.sidebar.selectbox("Select Employer", df["Employer"].unique())
 
     # Filter Data
-    selected_weekday = pd.to_datetime(selected_date).weekday()
+    selected_weekday = selected_date.weekday()
     df_trend = df.query("Employer == @selected_employer and Date.dt.weekday == @selected_weekday").sort_values("Date")
 
-    # Ensure the selected date is included in the dataset
-    df_selected_date = df[(df["Employer"] == selected_employer) & (df["Date"] == pd.to_datetime(selected_date))]
-    df_trend = pd.concat([df_selected_date, df_trend]).drop_duplicates().sort_values("Date")
+    # Ensure selected date is included
+    if selected_date not in df_trend["Date"].values:
+        selected_data = df[(df["Employer"] == selected_employer) & (df["Date"] == selected_date)]
+        df_trend = pd.concat([df_trend, selected_data]).sort_values("Date")
 
     # Dashboard Header
     st.markdown(f"<h2>Data Trend for {selected_employer}</h2>", unsafe_allow_html=True)
 
     # Columns Layout
     col1, col2 = st.columns(2)
+
 
     # Function to Plot Graphs
     def plot_graph(ax, x, y, title, xlabel, ylabel, color):
@@ -58,14 +60,16 @@ if uploaded_file:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.grid(True, linestyle="--", alpha=0.5)
-        ax.set_xticklabels(x.dt.strftime('%d-%m-%Y'), rotation=45)
+        ax.set_xticklabels(x.dt.strftime('%m-%d-%Y'), rotation=45)
+
 
     with col1:
         fig, ax = plt.subplots(figsize=(10, 5))
         if df_trend.empty or "Enrolled Hours-Hourly" not in df_trend.columns:
             st.warning("No matching trend data found.")
         else:
-            plot_graph(ax, df_trend["Date"], df_trend["Enrolled Hours-Hourly"], "Enrolled Hours Trend", "Date", "Enrolled Hours", "#00bcd4")
+            plot_graph(ax, df_trend["Date"], df_trend["Enrolled Hours-Hourly"], "Enrolled Hours Trend", "Date",
+                       "Enrolled Hours", "#00bcd4")
             st.pyplot(fig)
 
     with col2:
@@ -73,14 +77,15 @@ if uploaded_file:
         if df_trend.empty or "HourlyEnrolledWorked" not in df_trend.columns:
             st.warning("No data found for Hourly Enrolled Worked.")
         else:
-            plot_graph(ax, df_trend["Date"], df_trend["HourlyEnrolledWorked"], "Hourly Enrolled Worked Trend", "Date", "Hourly Enrolled Worked", "red")
+            plot_graph(ax, df_trend["Date"], df_trend["HourlyEnrolledWorked"], "Hourly Enrolled Worked Trend", "Date",
+                       "Hourly Enrolled Worked", "red")
             st.pyplot(fig)
 
     # Display Table
     if df_trend.empty:
         st.warning("No trend data found.")
     else:
-        st.dataframe(df_trend[df_trend["Employer"] == selected_employer])
+        st.dataframe(df_trend)
 
 else:
     st.info("Please upload a CSV file to start.")
