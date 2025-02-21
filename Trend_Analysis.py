@@ -40,7 +40,10 @@ if uploaded_file:
     # Filter Data
     selected_weekday = pd.to_datetime(selected_date).weekday()
     df_trend = df.query("Employer == @selected_employer and Date.dt.weekday == @selected_weekday").sort_values("Date")
-    df_trend = pd.concat([df_trend, df[df["Date"] == pd.to_datetime(selected_date)]])  # Ensure selected date is included
+
+    # Ensure the selected date is included in the dataset
+    df_selected_date = df[(df["Employer"] == selected_employer) & (df["Date"] == pd.to_datetime(selected_date))]
+    df_trend = pd.concat([df_selected_date, df_trend]).drop_duplicates().sort_values("Date")
 
     # Dashboard Header
     st.markdown(f"<h2>Data Trend for {selected_employer}</h2>", unsafe_allow_html=True)
@@ -55,7 +58,7 @@ if uploaded_file:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.grid(True, linestyle="--", alpha=0.5)
-        ax.set_xticklabels(x.dt.strftime('%m-%d-%Y'), rotation=45)
+        ax.set_xticklabels(x.dt.strftime('%d-%m-%Y'), rotation=45)
 
     with col1:
         fig, ax = plt.subplots(figsize=(10, 5))
@@ -77,7 +80,7 @@ if uploaded_file:
     if df_trend.empty:
         st.warning("No trend data found.")
     else:
-        st.dataframe(df_trend)
+        st.dataframe(df_trend[df_trend["Employer"] == selected_employer])
 
 else:
     st.info("Please upload a CSV file to start.")
