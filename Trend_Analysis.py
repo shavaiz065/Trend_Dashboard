@@ -6,7 +6,7 @@ import os
 # Streamlit Page Configuration
 st.set_page_config(
     layout="wide",
-    page_title="Trend Dashboard",
+    page_title="Data Trend",
     page_icon="📊",
 )
 
@@ -39,10 +39,13 @@ if uploaded_file:
 
     # Filter Data
     selected_weekday = pd.to_datetime(selected_date).weekday()
-    df_trend = df.query("Employer == @selected_employer and Date.dt.weekday == @selected_weekday").sort_values("Date")
+    df_trend = df[
+        (df["Employer"] == selected_employer) &
+        ((df["Date"].dt.weekday == selected_weekday) | (df["Date"] == pd.to_datetime(selected_date)))
+    ].sort_values("Date")
 
     # Dashboard Header
-    st.markdown(f"<h2>Trend Data for {selected_employer}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2>Data Trend for {selected_employer}</h2>", unsafe_allow_html=True)
 
     # Columns Layout
     col1, col2 = st.columns(2)
@@ -70,6 +73,24 @@ if uploaded_file:
             st.warning("No data found for Hourly Enrolled Worked.")
         else:
             plot_graph(ax, df_trend["Date"], df_trend["HourlyEnrolledWorked"], "Hourly Enrolled Worked Trend", "Date", "Hourly Enrolled Worked", "red")
+            st.pyplot(fig)
+
+    # Additional Graphs
+    col3, col4 = st.columns(2)
+    with col3:
+        fig, ax = plt.subplots(figsize=(10, 5))
+        if df_trend.empty or "Total Hours(Enrolled + Unenrolled)" not in df_trend.columns:
+            st.warning("No data found for Total Hours.")
+        else:
+            plot_graph(ax, df_trend["Date"], df_trend["Total Hours(Enrolled + Unenrolled)"], "Total Hours Trend", "Date", "Total Hours", "green")
+            st.pyplot(fig)
+
+    with col4:
+        fig, ax = plt.subplots(figsize=(10, 5))
+        if df_trend.empty or "Employees in TA" not in df_trend.columns:
+            st.warning("No data found for Employees in TA.")
+        else:
+            plot_graph(ax, df_trend["Date"], df_trend["Employees in TA"], "Employees in TA Trend", "Date", "Employees in TA", "purple")
             st.pyplot(fig)
 
     # Display Table
