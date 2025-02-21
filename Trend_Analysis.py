@@ -37,15 +37,13 @@ if uploaded_file:
     selected_date = st.sidebar.date_input("Select a Date", pd.to_datetime("today"))
     selected_employer = st.sidebar.selectbox("Select Employer", df["Employer"].unique())
 
-    # Convert selected date to MM-DD-YYYY format
-    formatted_date = pd.to_datetime(selected_date).strftime('%m-%d-%Y')
-
     # Filter Data
     selected_weekday = pd.to_datetime(selected_date).weekday()
     df_trend = df.query("Employer == @selected_employer and Date.dt.weekday == @selected_weekday").sort_values("Date")
+    df_trend = pd.concat([df_trend, df[df["Date"] == pd.to_datetime(selected_date)]])  # Ensure selected date is included
 
     # Dashboard Header
-    st.markdown(f"<h2>Data Trend for {selected_employer} on {formatted_date}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2>Data Trend for {selected_employer}</h2>", unsafe_allow_html=True)
 
     # Columns Layout
     col1, col2 = st.columns(2)
