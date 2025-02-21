@@ -37,15 +37,18 @@ if uploaded_file:
     selected_date = pd.to_datetime(st.sidebar.date_input("Select a Date", pd.to_datetime("today")))
     selected_employer = st.sidebar.selectbox("Select Employer", df["Employer"].unique())
 
+    # Convert date format to MM-DD-YYYY
+    df["Date"] = df["Date"].dt.strftime('%m-%d-%Y')
+    selected_date_str = selected_date.strftime('%m-%d-%Y')
+
     # Filter Data
     selected_weekday = selected_date.weekday()
     df_trend = df.query("Employer == @selected_employer and Date.dt.weekday == @selected_weekday").sort_values("Date")
 
-    # Ensure selected date is included in the graph
-    if selected_date not in df_trend["Date"].values:
-        selected_row = df[(df["Employer"] == selected_employer) & (df["Date"] == selected_date)]
-        if not selected_row.empty:
-            df_trend = pd.concat([df_trend, selected_row]).sort_values("Date")
+    # Ensure Selected Date is Always Included
+    if selected_date_str not in df_trend["Date"].values:
+        df_selected_date = df[(df["Employer"] == selected_employer) & (df["Date"] == selected_date_str)]
+        df_trend = pd.concat([df_trend, df_selected_date]).drop_duplicates().sort_values("Date")
 
     # Dashboard Header
     st.markdown(f"<h2>Data Trend for {selected_employer}</h2>", unsafe_allow_html=True)
@@ -61,7 +64,7 @@ if uploaded_file:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.grid(True, linestyle="--", alpha=0.5)
-        ax.set_xticklabels(x.dt.strftime('%m-%d-%Y'), rotation=45)
+        ax.set_xticklabels(x, rotation=45)
 
 
     with col1:
