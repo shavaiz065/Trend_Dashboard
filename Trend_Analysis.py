@@ -37,15 +37,18 @@ if uploaded_file:
     selected_date = st.sidebar.date_input("Select a Date", pd.to_datetime("today"))
     selected_employer = st.sidebar.selectbox("Select Employer", df["Employer"].unique())
 
-    # Filter Data to Include Both Selected Date & Previous Trends
+    # Convert selected date to MM-DD-YYYY format
+    formatted_date = pd.to_datetime(selected_date).strftime('%m-%d-%Y')
+
+    # Filter Data
     selected_weekday = pd.to_datetime(selected_date).weekday()
-    df_trend = df.query("Employer == @selected_employer and (Date.dt.weekday == @selected_weekday or Date == @selected_date)").sort_values("Date")
+    df_trend = df.query("Employer == @selected_employer and Date.dt.weekday == @selected_weekday").sort_values("Date")
 
     # Dashboard Header
-    st.markdown(f"<h2>Data Trend for {selected_employer}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2>Data Trend for {selected_employer} on {formatted_date}</h2>", unsafe_allow_html=True)
 
     # Columns Layout
-    col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns(2)
 
     # Function to Plot Graphs
     def plot_graph(ax, x, y, title, xlabel, ylabel, color):
@@ -54,8 +57,7 @@ if uploaded_file:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.grid(True, linestyle="--", alpha=0.5)
-        ax.set_xticks(x)
-        ax.set_xticklabels(x.dt.strftime('%b %d, %Y'), rotation=45, ha="right")
+        ax.set_xticklabels(x.dt.strftime('%m-%d-%Y'), rotation=45)
 
     with col1:
         fig, ax = plt.subplots(figsize=(10, 5))
@@ -71,24 +73,6 @@ if uploaded_file:
             st.warning("No data found for Hourly Enrolled Worked.")
         else:
             plot_graph(ax, df_trend["Date"], df_trend["HourlyEnrolledWorked"], "Hourly Enrolled Worked Trend", "Date", "Hourly Enrolled Worked", "red")
-            st.pyplot(fig)
-
-    # Additional Graphs for Total Hours and Employees in TA
-    col3, col4 = st.columns([1, 1])
-    with col3:
-        fig, ax = plt.subplots(figsize=(10, 5))
-        if df_trend.empty or "Total Hours(Enrolled + Unenrolled)" not in df_trend.columns:
-            st.warning("No data found for Total Hours.")
-        else:
-            plot_graph(ax, df_trend["Date"], df_trend["Total Hours(Enrolled + Unenrolled)"], "Total Hours Trend", "Date", "Total Hours", "green")
-            st.pyplot(fig)
-
-    with col4:
-        fig, ax = plt.subplots(figsize=(10, 5))
-        if df_trend.empty or "Employees in TA" not in df_trend.columns:
-            st.warning("No data found for Employees in TA.")
-        else:
-            plot_graph(ax, df_trend["Date"], df_trend["Employees in TA"], "Employees in TA Trend", "Date", "Employees", "orange")
             st.pyplot(fig)
 
     # Display Table
