@@ -4,58 +4,58 @@ import matplotlib.pyplot as plt
 import os
 
 # Streamlit Page Configuration
-st.set_page_config(
-    layout="wide",
-    page_title="Data Trend",
-    page_icon="📊",
-)
+st.set_page_config(layout="wide", page_title="Data Trend", page_icon="📊")
 
 # Custom CSS for Styling
-st.markdown("""
+st.markdown(
+    """
     <style>
         .stApp { background: linear-gradient(135deg, #00bcd4, #212121); }
         h2 { text-align: center; color: #00bcd4; font-family: 'Roboto', sans-serif; }
         .stButton button { background-color: #00bcd4; color: white; border-radius: 12px; padding: 10px 20px; }
         .stButton button:hover { background-color: #4caf50; }
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
 
 # Sidebar File Uploader
 uploaded_file = st.sidebar.file_uploader("Upload CSV File", type=["csv"])
 
 if uploaded_file:
     try:
-        df = pd.read_csv(uploaded_file, parse_dates=["Date"])  # Auto-parse dates
+        df = pd.read_csv(uploaded_file)
+
+        # Ensure necessary columns exist
+        required_columns = {"Employer", "Date"}
+        if not required_columns.issubset(df.columns):
+            st.error(f"Uploaded file must contain columns: {', '.join(required_columns)}")
+            st.stop()
+
+        # Convert "Date" column to datetime
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+        df = df.dropna(subset=["Date"])  # Remove rows where Date is NaT
+
+        # Add Weekday column
+        df["Weekday"] = df["Date"].dt.weekday
+
     except Exception as e:
-        st.error(f"Error reading file: {e}")
+        st.error(f"Error processing file: {e}")
         st.stop()
 
-    # Drop NaN dates
-    df = df.dropna(subset=["Date"])
-
     # Sidebar Filters
-    selected_date = pd.to_datetime(st.sidebar.date_input("Select a Date", pd.to_datetime("today")))
+    selected_date = st.sidebar.date_input("Select a Date", pd.to_datetime("today"))
     selected_employer = st.sidebar.selectbox("Select Employer", df["Employer"].unique())
 
-    # Convert date format to MM-DD-YYYY
-    df["Date"] = df["Date"].dt.strftime('%m-%d-%Y')
-    selected_date_str = selected_date.strftime('%m-%d-%Y')
-
     # Filter Data
-    selected_weekday = selected_date.weekday()
-    df_trend = df.query("Employer == @selected_employer and Date.dt.weekday == @selected_weekday").sort_values("Date")
-
-    # Ensure Selected Date is Always Included
-    if selected_date_str not in df_trend["Date"].values:
-        df_selected_date = df[(df["Employer"] == selected_employer) & (df["Date"] == selected_date_str)]
-        df_trend = pd.concat([df_trend, df_selected_date]).drop_duplicates().sort_values("Date")
+    selected_weekday = pd.to_datetime(selected_date).weekday()
+    df_trend = df[(df["Employer"] == selected_employer) & (df["Weekday"] == selected_weekday)].sort_values("Date")
 
     # Dashboard Header
-    st.markdown(f"<h2>Data Trend for {selected_employer}</h2>", unsafe_allow_html=True)
+    st.markdown("<h2>Data Trend</h2>", unsafe_allow_html=True)
 
-    # Columns Layout
+    # Layout Columns
     col1, col2 = st.columns(2)
-
 
     # Function to Plot Graphs
     def plot_graph(ax, x, y, title, xlabel, ylabel, color):
@@ -64,26 +64,27 @@ if uploaded_file:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.grid(True, linestyle="--", alpha=0.5)
-        ax.set_xticklabels(x, rotation=45)
+        ax.set_xticks(range(len(x)))
+        ax.set_xticklabels(x.dt.strftime('%Y-%m-%d'), rotation=45)
 
 
     with col1:
-        fig, ax = plt.subplots(figsize=(10, 5))
-        if df_trend.empty or "Enrolled Hours-Hourly" not in df_trend.columns:
-            st.warning("No matching trend data found.")
-        else:
-            plot_graph(ax, df_trend["Date"], df_trend["Enrolled Hours-Hourly"], "Enrolled Hours Trend", "Date",
-                       "Enrolled Hours", "#00bcd4")
+        if "Enrolled Hours-Hourly" in df_trend.columns:
+            fig, ax = plt.subplots(figsize=(10, 5))
+            plot_graph(ax, df_trend["Date"], df_trend["Enrolled Hours-Hourly"],
+                       "Enrolled Hours Trend", "Date", "Enrolled Hours", "#00bcd4")
             st.pyplot(fig)
+        else:
+            st.warning("No data available for 'Enrolled Hours-Hourly'.")
 
     with col2:
-        fig, ax = plt.subplots(figsize=(10, 5))
-        if df_trend.empty or "HourlyEnrolledWorked" not in df_trend.columns:
-            st.warning("No data found for Hourly Enrolled Worked.")
-        else:
-            plot_graph(ax, df_trend["Date"], df_trend["HourlyEnrolledWorked"], "Hourly Enrolled Worked Trend", "Date",
-                       "Hourly Enrolled Worked", "red")
+        if "HourlyEnrolledWorked" in df_trend.columns:
+            fig, ax = plt.subplots(figsize=(10, 5))
+            plot_graph(ax, df_trend["Date"], df_trend["HourlyEnrolledWorked"],
+                       "Hourly Enrolled Worked Trend", "Date", "Hourly Enrolled Worked", "red")
             st.pyplot(fig)
+        else:
+            st.warning("No data available for 'Hourly Enrolled Worked'.")
 
     # Display Table
     if df_trend.empty:
@@ -95,4 +96,4 @@ else:
     st.info("Please upload a CSV file to start.")
 
 # Debugging Information
-print("Running from:", os.getcwd())
+st.sidebar.text(f"Running from: {os.getcwd()}")

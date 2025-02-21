@@ -1,0 +1,7 @@
+import streamlit as st
+
+# Streamlit Page Configuration
+st.set_page_config(page_title="Data Trend", page_icon="📊")
+
+# Simple title display
+st.markdown("<h2>Data Trend</h2>", unsafe_allow_html=True)
