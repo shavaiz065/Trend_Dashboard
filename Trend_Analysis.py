@@ -41,10 +41,11 @@ if uploaded_file:
     selected_weekday = selected_date.weekday()
     df_trend = df.query("Employer == @selected_employer and Date.dt.weekday == @selected_weekday").sort_values("Date")
 
-    # Ensure selected date is included
+    # Ensure selected date is included in the graph
     if selected_date not in df_trend["Date"].values:
-        selected_data = df[(df["Employer"] == selected_employer) & (df["Date"] == selected_date)]
-        df_trend = pd.concat([df_trend, selected_data]).sort_values("Date")
+        selected_row = df[(df["Employer"] == selected_employer) & (df["Date"] == selected_date)]
+        if not selected_row.empty:
+            df_trend = pd.concat([df_trend, selected_row]).sort_values("Date")
 
     # Dashboard Header
     st.markdown(f"<h2>Data Trend for {selected_employer}</h2>", unsafe_allow_html=True)
