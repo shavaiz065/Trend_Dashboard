@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <defs>
+    <!-- Gradients for premium look -->
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#991b1b" />
+      <stop offset="100%" stop-color="#ef4444" />
+    </linearGradient>
+    
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f1f5f9" />
+      <stop offset="100%" stop-color="#e2e8f0" />
+    </linearGradient>
+    
+    <!-- Filter for subtle shadow -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#64748b" flood-opacity="0.2"/>
+    </filter>
+    
+    <!-- Pattern for background -->
+    <pattern id="gridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" stroke-width="0.5"/>
+    </pattern>
+    
+    <!-- Path for curved text - moved up by additional 10 points -->
+    <path id="textPath" d="M 90 145 A 110 110 0 0 0 310 145" fill="none" />
+  </defs>
+  
+  <style>
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+    
+    @keyframes dash {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+    
+    @keyframes wave {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes fadeInUp {
+      from { 
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .pulse-dot {
+      animation: pulse 2s infinite;
+    }
+    
+    .line-animate {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: dash 3s ease-in-out forwards;
+    }
+    
+    .line-1 { animation-delay: 0.2s; }
+    .line-2 { animation-delay: 0.4s; }
+    .line-3 { animation-delay: 0.6s; }
+    .line-4 { animation-delay: 0.8s; }
+    
+    .data-point {
+      animation: wave 4s infinite ease-in-out;
+    }
+    
+    .data-point-1 { animation-delay: 0.1s; }
+    .data-point-2 { animation-delay: 0.3s; }
+    .data-point-3 { animation-delay: 0.5s; }
+    .data-point-4 { animation-delay: 0.7s; }
+    .data-point-5 { animation-delay: 0.9s; }
+    
+    .logo-text {
+      animation: fadeInUp 1.5s forwards;
+    }
+    
+    .logo-subtitle {
+      animation: fadeInUp 1.5s forwards;
+      animation-delay: 0.3s;
+    }
+    
+    .gear {
+      transform-origin: center;
+      animation: spin 20s linear infinite;
+    }
+    
+    .gear-small {
+      transform-origin: center;
+      animation: spin 15s linear infinite reverse;
+    }
+    
+    .bg-element {
+      animation: fadeIn 2s forwards;
+      opacity: 0;
+    }
+    
+    .bg-element-1 { animation-delay: 0.1s; }
+    .bg-element-2 { animation-delay: 0.3s; }
+    .bg-element-3 { animation-delay: 0.5s; }
+    
+    .data-panel {
+      animation: fadeIn 1s forwards;
+      animation-delay: 0.5s;
+      opacity: 0;
+    }
+  </style>
+  
+  <!-- Premium background -->
+  <circle cx="200" cy="150" r="140" fill="url(#bgGradient)" filter="url(#shadow)" />
+  <circle cx="200" cy="150" r="138" fill="none" stroke="#cbd5e1" stroke-width="0.5" />
+  <circle cx="200" cy="150" r="130" fill="url(#gridPattern)" opacity="0.4" />
+  
+  <!-- Background inner circle - clearly visible -->
+  <circle cx="200" cy="150" r="115" fill="none" stroke="#cbd5e1" stroke-width="1.5" class="bg-element bg-element-3" />
+  
+  <!-- No data panel background or dashboard text -->
+  
+  <!-- Data Visualization Elements (no clipping or panel) -->
+  <g class="data-panel">
+    <!-- No grid lines -->
+    
+    <!-- Histogram Bars - moved 3 more points left -->
+    <g transform="translate(129, 150)">
+      <rect x="0" y="-33" width="13" height="33" fill="url(#blueGradient)" class="data-point data-point-1" rx="2" />
+      <rect x="26" y="-52" width="13" height="52" fill="url(#blueGradient)" class="data-point data-point-2" rx="2" />
+      <rect x="52" y="-39" width="13" height="39" fill="url(#blueGradient)" class="data-point data-point-3" rx="2" />
+      <rect x="78" y="-65" width="13" height="65" fill="url(#blueGradient)" class="data-point data-point-4" rx="2" />
+      <rect x="104" y="-46" width="13" height="46" fill="url(#blueGradient)" class="data-point data-point-5" rx="2" />
+      <rect x="130" y="-59" width="13" height="59" fill="url(#blueGradient)" class="data-point data-point-1" rx="2" />
+    </g>
+  
+    <!-- Analytics Graph Lines - moved 3 more points left -->
+    <g transform="translate(129, 100)">
+      <polyline points="0,52 26,33 52,39 78,13 104,26 130,7" fill="none" stroke="url(#accentGradient)" stroke-width="3" class="line-animate line-1" />
+      <polyline points="0,46 26,20 52,33 78,26 104,7 130,20" fill="none" stroke="url(#blueGradient)" stroke-width="3" class="line-animate line-2" />
+      
+      <!-- Premium data points with subtle pulse -->
+      <circle cx="0" cy="52" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+      <circle cx="26" cy="33" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+      <circle cx="52" cy="39" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+      <circle cx="78" cy="13" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+      <circle cx="104" cy="26" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+      <circle cx="130" cy="7" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+      
+      <circle cx="0" cy="46" r="4" fill="#3b82f6" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+      <circle cx="26" cy="20" r="4" fill="#3b82f6" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+      <circle cx="52" cy="33" r="4" fill="#3b82f6" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+      <circle cx="78" cy="26" r="4" fill="#3b82f6" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+      <circle cx="104" cy="7" r="4" fill="#3b82f6" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+      <circle cx="130" cy="20" r="4" fill="#3b82f6" stroke="#ffffff" stroke-width="0.5" class="pulse-dot" />
+    </g>
+  </g>
+  
+  <!-- Monitoring Elements (Gears) -->
+  <g transform="translate(250, 80)">
+    <path d="M0,-13 L3,-5 L12,-8 L10,0 L12,8 L3,5 L0,13 L-3,5 L-12,8 L-10,0 L-12,-8 L-3,-5 Z" fill="#475569" stroke="#94a3b8" stroke-width="0.5" class="gear" filter="url(#shadow)" />
+    <circle cx="0" cy="0" r="5" fill="#94a3b8" />
+    <circle cx="0" cy="0" r="3" fill="#ffffff" />
+  </g>
+  
+  <g transform="translate(270, 95)">
+    <path d="M0,-10 L2,-4 L9,-6 L7,0 L9,6 L2,4 L0,10 L-2,4 L-9,6 L-7,0 L-9,-6 L-2,-4 Z" fill="#64748b" stroke="#94a3b8" stroke-width="0.5" class="gear-small" filter="url(#shadow)" />
+    <circle cx="0" cy="0" r="4" fill="#94a3b8" />
+    <circle cx="0" cy="0" r="2" fill="#ffffff" />
+  </g>
+  
+  <!-- Digital circuit pattern for tech feel -->
+  <g stroke="#94a3b8" stroke-width="0.5" fill="none">
+    <path d="M100,200 L120,200 L120,210 L140,210 L140,200 L170,200" class="bg-element bg-element-1" />
+    <path d="M170,200 L190,200 L190,190 L210,190 L210,200 L230,200" class="bg-element bg-element-2" />
+    <path d="M230,200 L250,200 L250,210 L270,210 L270,200 L300,200" class="bg-element bg-element-3" />
+    
+    <circle cx="170" cy="200" r="3" fill="#3b82f6" />
+    <circle cx="230" cy="200" r="3" fill="#3b82f6" />
+  </g>
+  
+  <!-- Text Elements - DMAT moved down by additional 10 points (30 total) -->
+  <g filter="url(#shadow)">
+    <text x="200" y="190" font-family="'Arial Black', Gadget, sans-serif" font-size="30" font-weight="bold" text-anchor="middle" fill="url(#blueGradient)" class="logo-text">DMAT</text>
+  </g>
+  
+  <!-- Curved text at bottom - larger size for better visibility -->
+  <g filter="url(#shadow)">
+    <text class="logo-subtitle" style="font-size: 13px; font-weight: bold; fill: url(#blueGradient); letter-spacing: 0.5px;" dy="4">
+      <textPath href="#textPath" startOffset="50%" text-anchor="middle">
+        DATA MONITORING AND ANALYTICS TEAM
+      </textPath>
+    </text>
+  </g>
+  
+  <!-- Premium border accent -->
+  <circle cx="200" cy="150" r="142" fill="none" stroke="url(#blueGradient)" stroke-width="3" />
+</svg>

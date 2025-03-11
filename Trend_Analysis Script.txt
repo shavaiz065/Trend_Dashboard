@@ -3,8 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import datetime
-from PIL import Image
-import os
 
 # Set page config with a modern layout
 st.set_page_config(
@@ -24,39 +22,6 @@ st.markdown("""
 
 # Sidebar file uploader
 uploaded_file = st.sidebar.file_uploader("Upload CSV file", type=["csv"])
-
-# Show welcome screen only when no file is uploaded
-if uploaded_file is None:
-    st.markdown(
-        """
-        <div style="text-align: center; margin-top: 50px;">
-            <h1 style="color: #3498db;">📊 Welcome to the DMAT-Trend Analysis Dashboard! 📊</h1>
-            <p style="font-size: 18px; color: #2c3e50;">
-                Upload a CSV file from the sidebar to get started.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Get absolute path to logo file
-    logo_path = os.path.join("assets", "logo.png")
-
-    # Check if logo file exists
-    if os.path.exists(logo_path):
-        logo = Image.open(logo_path)  # Open the image
-        col1, col2, col3 = st.columns([1, 2, 1])  # Create columns to center the image
-        with col2:
-            st.image(logo, use_container_width=True)  # Center logo with full width
-    else:
-        st.error(f"⚠️ Logo not found at: {logo_path}. Please check the file path.")
-
-
-# Now process the file if uploaded
-if uploaded_file:
-    # Your existing logic to process the file goes here
-    pass
-
 
 # Check if file is uploaded
 if uploaded_file is not None:
