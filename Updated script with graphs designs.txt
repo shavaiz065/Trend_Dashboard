@@ -167,7 +167,7 @@ if uploaded_file is not None:
     with st.sidebar:
         def display_summary(title, avg, reflected, difference):
             color = "red" if difference < 0 else "green"
-            diff_icon = "🔻" if difference < 0 else "▲"
+            diff_icon = "🔻" if difference < 0 else "🔺"
             formatted_diff = f"<span style='color:{color}; font-weight:bold;'>{diff_icon} {difference:.2f}%</span>"
 
             return f"""
@@ -183,65 +183,6 @@ if uploaded_file is not None:
         # Display summary for each metric
         for title, (avg, reflected, difference) in metrics_results.items():
             st.markdown(display_summary(title, avg, reflected, difference), unsafe_allow_html=True)
-
-    import streamlit as st
-
-    # Create a centered title with better styling
-    st.markdown("""
-        <h2 style='text-align: center; color: #2C3E50; font-weight: bold;'>
-            📊 Summary Overview
-        </h2>
-    """, unsafe_allow_html=True)
-
-    # Create 4 columns for displaying summary boxes
-    cols = st.columns(4)
-
-
-    def display_summary(col, title, avg, reflected, difference):
-        """
-        Function to display a visually enhanced summary box.
-        """
-        # Define colors and icons based on the difference value
-        if difference < 0:
-            bg_color = "#FFE6E6"  # Light Red Background
-            text_color = "#E74C3C"  # Red Text
-            icon = "🔻"
-        else:
-            bg_color = "#E6F9E6"  # Light Green Background
-            text_color = "#27AE60"  # Green Text
-            icon = "▲"
-
-        # Format difference with a visually appealing design
-        formatted_diff = f"""
-            <span style='color:{text_color}; font-size: 20px; font-weight: bold;'>
-                {icon} {difference:.2f}%
-            </span>
-        """
-
-        # Enhanced card-style summary box
-        summary_html = f"""
-            <div style="
-                padding: 18px; 
-                border-radius: 12px; 
-                background: {bg_color}; 
-                text-align: center; 
-                box-shadow: 2px 4px 12px rgba(0,0,0,0.1);
-                font-family: 'Arial', sans-serif;
-                transition: transform 0.2s;
-            " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                <h4 style="margin: 5px 0; color: #34495E; font-weight: bold;">{title}</h4>
-                <p style="margin: 6px 0; font-size: 16px;"><b>Avg:</b> {avg:.2f}</p>
-                <p style="margin: 6px 0; font-size: 16px;"><b>Reflected:</b> {reflected:.2f}</p>
-                <p style="margin: 8px 0; font-size: 18px;">{formatted_diff}</p>
-            </div>
-        """
-
-        col.markdown(summary_html, unsafe_allow_html=True)
-
-
-    # Display summaries dynamically across columns
-    for i, (title, (avg, reflected, difference)) in enumerate(metrics_results.items()):
-        display_summary(cols[i % len(cols)], title, avg, reflected, difference)
 
     # Graphs Section
     st.markdown(f"<h2 style='text-align: center;'>Trend Data for {selected_employer}</h2>", unsafe_allow_html=True)
