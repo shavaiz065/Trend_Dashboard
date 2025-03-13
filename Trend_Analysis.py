@@ -51,12 +51,10 @@ if uploaded_file is None:
     else:
         st.error(f"⚠️ Logo not found at: {logo_path}. Please check the file path.")
 
-
 # Now process the file if uploaded
 if uploaded_file:
     # Your existing logic to process the file goes here
     pass
-
 
 # Check if file is uploaded
 if uploaded_file is not None:
@@ -131,6 +129,14 @@ if uploaded_file is not None:
     selected_weekday = pd.to_datetime(selected_date).weekday()
     df_trend = df[(df["Employer"] == selected_employer) & (df["Date"].dt.weekday == selected_weekday)].copy()
     df_trend = df_trend.sort_values(by="Date")
+
+    # Create a dataframe for the last 7 days data
+    end_date = pd.to_datetime(selected_date)
+    start_date = end_date - pd.Timedelta(days=6)
+    df_last_7_days = df[(df["Employer"] == selected_employer) &
+                        (df["Date"] >= start_date) &
+                        (df["Date"] <= end_date)].copy()
+    df_last_7_days = df_last_7_days.sort_values(by="Date")
 
 
     # Summary Metrics Calculation
@@ -361,7 +367,7 @@ if uploaded_file is not None:
     # Filter metrics that exist in the dataframe
     available_charts = [m for m in chart_metrics if m[0] in df.columns]
 
-    # Create two-column layout
+    # Create three-column layout for better organization of charts
     col1, col2 = st.columns([2, 2])
 
     # Position to place charts
@@ -388,6 +394,29 @@ if uploaded_file is not None:
                         horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
 
             st.pyplot(fig)
+
+    # Add the fifth graph - Total Hours for Last 7 Days
+    st.markdown(f"<h2 style='text-align: center;'>Last 7 Days View for {selected_employer}</h2>",
+                unsafe_allow_html=True)
+
+    col1, col2 = st.columns([2, 2])
+
+    with col1:
+        if "Total Hours(Enrolled + Unenrolled)" in df.columns and not df_last_7_days.empty:
+            fig, ax = plt.subplots(figsize=(12, 6))
+            plot_trend(
+                ax,
+                df_last_7_days["Date"],
+                df_last_7_days["Total Hours(Enrolled + Unenrolled)"],
+                f"Total Hours (Last 7 Days) for {selected_employer}",
+                "Date",
+                "Total Hours",
+                "#9C27B0",  # Purple color to differentiate from other charts
+                '^'  # Triangle marker for distinction
+            )
+            st.pyplot(fig)
+        else:
+            st.warning("No data available for the last 7 days view.")
 
     if df_trend.empty:
         st.warning("No trend data found for previous same weekdays.")
