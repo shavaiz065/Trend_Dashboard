@@ -138,14 +138,6 @@ if uploaded_file is not None:
                         (df["Date"] <= end_date)].copy()
     df_last_7_days = df_last_7_days.sort_values(by="Date")
 
-    # NEW: Create a dataframe for the last 30 days data
-    end_date_30 = pd.to_datetime(selected_date)
-    start_date_30 = end_date_30 - pd.Timedelta(days=29)
-    df_last_30_days = df[(df["Employer"] == selected_employer) &
-                         (df["Date"] >= start_date_30) &
-                         (df["Date"] <= end_date_30)].copy()
-    df_last_30_days = df_last_30_days.sort_values(by="Date")
-
 
     # Summary Metrics Calculation
     def calculate_summary(metric):
@@ -403,15 +395,13 @@ if uploaded_file is not None:
 
             st.pyplot(fig)
 
-    # Add the seven-day and thirty-day views with tabs
-    st.markdown(f"<h2 style='text-align: center;'>Time Period Analysis for {selected_employer}</h2>",
+    # Add the fifth graph - Total Hours for Last 7 Days
+    st.markdown(f"<h2 style='text-align: center;'>Last 7 Days View for {selected_employer}</h2>",
                 unsafe_allow_html=True)
 
-    # Use tabs to organize the time period views
-    tab1, tab2 = st.tabs(["Last 7 Days View", "Last 30 Days View"])
+    col1, col2 = st.columns([2, 2])
 
-    with tab1:
-        # Last 7 Days View
+    with col1:
         if "Total Hours(Enrolled + Unenrolled)" in df.columns and not df_last_7_days.empty:
             fig, ax = plt.subplots(figsize=(12, 6))
             plot_trend(
@@ -427,201 +417,6 @@ if uploaded_file is not None:
             st.pyplot(fig)
         else:
             st.warning("No data available for the last 7 days view.")
-
-    with tab2:
-        # Last 30 Days View with Bar Charts
-        if "Total Hours(Enrolled + Unenrolled)" in df.columns and not df_last_30_days.empty:
-            col1, col2 = st.columns([1, 1])
-
-            # Main 30-day bar chart for Total Hours
-            with col1:
-                fig, ax = plt.subplots(figsize=(12, 6))
-
-                # Bar chart for Total Hours
-                bars = ax.bar(
-                    df_last_30_days["Date"],
-                    df_last_30_days["Total Hours(Enrolled + Unenrolled)"],
-                    color="#FF5722",
-                    alpha=0.8,
-                    width=0.7
-                )
-
-                # Add data labels on top of bars
-                for bar in bars:
-                    height = bar.get_height()
-                    ax.text(
-                        bar.get_x() + bar.get_width() / 2.,
-                        height + 1,
-                        f'{height:.1f}',
-                        ha='center',
-                        va='bottom',
-                        fontsize=8,
-                        rotation=45
-                    )
-
-                # Style the chart
-                ax.set_facecolor('#f9f9f9')
-                fig.patch.set_facecolor('#f9f9f9')
-                ax.set_xlabel("Date", fontsize=11, fontweight='bold', color='#555555')
-                ax.set_ylabel("Total Hours", fontsize=11, fontweight='bold', color='#555555')
-                ax.set_title(f"Total Hours (Last 30 Days) for {selected_employer}", fontsize=14, fontweight='bold',
-                             color='#2c3e50', pad=15)
-                ax.grid(True, linestyle='--', alpha=0.7, color='#dddddd', axis='y')
-
-                # Format x-axis dates
-                ax.set_xticks(df_last_30_days["Date"])
-                ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%Y-%m-%d'), rotation=45, ha='right', fontsize=8)
-
-                # Y-axis scaling options
-                if y_axis_option == "Start from Zero":
-                    ax.set_ylim(bottom=0, top=df_last_30_days["Total Hours(Enrolled + Unenrolled)"].max() * 1.15)
-                elif y_axis_option == "Fixed Range":
-                    global_min = df[df["Employer"] == selected_employer][
-                                     "Total Hours(Enrolled + Unenrolled)"].min() * 0.93
-                    global_max = df[df["Employer"] == selected_employer][
-                                     "Total Hours(Enrolled + Unenrolled)"].max() * 1.07
-                    ax.set_ylim(bottom=global_min, top=global_max)
-
-                # Add trend line
-                x = np.arange(len(df_last_30_days))
-                y = df_last_30_days["Total Hours(Enrolled + Unenrolled)"].values
-                z = np.polyfit(x, y, 1)
-                p = np.poly1d(z)
-                ax.plot(df_last_30_days["Date"], p(x), "--", color="#2c3e50", linewidth=2, alpha=0.8,
-                        label="Trend Line")
-
-                # Add legend
-                ax.legend(frameon=True, fancybox=True, framealpha=0.9, fontsize=10, loc='upper right',
-                          edgecolor='#cccccc')
-
-                fig.tight_layout()
-                st.pyplot(fig)
-
-            # Additional bar chart for 30-day Enrolled Hours
-            with col2:
-                if "Enrolled Hours-Hourly" in df.columns:
-                    fig, ax = plt.subplots(figsize=(12, 6))
-
-                    # Bar chart for Enrolled Hours
-                    bars = ax.bar(
-                        df_last_30_days["Date"],
-                        df_last_30_days["Enrolled Hours-Hourly"],
-                        color="#4CAF50",
-                        alpha=0.8,
-                        width=0.7
-                    )
-
-                    # Add data labels on top of bars
-                    for bar in bars:
-                        height = bar.get_height()
-                        ax.text(
-                            bar.get_x() + bar.get_width() / 2.,
-                            height + 1,
-                            f'{height:.1f}',
-                            ha='center',
-                            va='bottom',
-                            fontsize=8,
-                            rotation=45
-                        )
-
-                    # Style the chart
-                    ax.set_facecolor('#f9f9f9')
-                    fig.patch.set_facecolor('#f9f9f9')
-                    ax.set_xlabel("Date", fontsize=11, fontweight='bold', color='#555555')
-                    ax.set_ylabel("Enrolled Hours", fontsize=11, fontweight='bold', color='#555555')
-                    ax.set_title(f"Enrolled Hours (Last 30 Days) for {selected_employer}", fontsize=14,
-                                 fontweight='bold', color='#2c3e50', pad=15)
-                    ax.grid(True, linestyle='--', alpha=0.7, color='#dddddd', axis='y')
-
-                    # Format x-axis dates
-                    ax.set_xticks(df_last_30_days["Date"])
-                    ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%Y-%m-%d'), rotation=45, ha='right',
-                                       fontsize=8)
-
-                    # Y-axis scaling options
-                    if y_axis_option == "Start from Zero":
-                        ax.set_ylim(bottom=0, top=df_last_30_days["Enrolled Hours-Hourly"].max() * 1.15)
-                    elif y_axis_option == "Fixed Range":
-                        global_min = df[df["Employer"] == selected_employer]["Enrolled Hours-Hourly"].min() * 0.93
-                        global_max = df[df["Employer"] == selected_employer]["Enrolled Hours-Hourly"].max() * 1.07
-                        ax.set_ylim(bottom=global_min, top=global_max)
-
-                    # Add trend line
-                    x = np.arange(len(df_last_30_days))
-                    y = df_last_30_days["Enrolled Hours-Hourly"].values
-                    z = np.polyfit(x, y, 1)
-                    p = np.poly1d(z)
-                    ax.plot(df_last_30_days["Date"], p(x), "--", color="#2c3e50", linewidth=2, alpha=0.8,
-                            label="Trend Line")
-
-                    # Add legend
-                    ax.legend(frameon=True, fancybox=True, framealpha=0.9, fontsize=10, loc='upper right',
-                              edgecolor='#cccccc')
-
-                    fig.tight_layout()
-                    st.pyplot(fig)
-                else:
-                    st.warning("No enrolled hours data available for the last 30 days view.")
-
-            # Monthly statistics summary
-            if not df_last_30_days.empty:
-                st.subheader("30-Day Statistics")
-
-                # Calculate monthly statistics
-                monthly_stats = {
-                    "Total Hours": {
-                        "Average": df_last_30_days["Total Hours(Enrolled + Unenrolled)"].mean(),
-                        "Maximum": df_last_30_days["Total Hours(Enrolled + Unenrolled)"].max(),
-                        "Minimum": df_last_30_days["Total Hours(Enrolled + Unenrolled)"].min(),
-                        "Total": df_last_30_days["Total Hours(Enrolled + Unenrolled)"].sum(),
-                    }
-                }
-
-                if "Enrolled Hours-Hourly" in df.columns:
-                    monthly_stats["Enrolled Hours"] = {
-                        "Average": df_last_30_days["Enrolled Hours-Hourly"].mean(),
-                        "Maximum": df_last_30_days["Enrolled Hours-Hourly"].max(),
-                        "Minimum": df_last_30_days["Enrolled Hours-Hourly"].min(),
-                        "Total": df_last_30_days["Enrolled Hours-Hourly"].sum(),
-                    }
-
-                # Display monthly statistics in a modern card format
-                metric_cols = st.columns(len(monthly_stats))
-
-                for i, (metric_name, stats) in enumerate(monthly_stats.items()):
-                    with metric_cols[i]:
-                        st.markdown(f"""
-                            <div style="
-                                background: linear-gradient(135deg, #2980b9, #2c3e50);
-                                border-radius: 10px;
-                                padding: 15px;
-                                color: white;
-                                text-align: center;
-                                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                            ">
-                                <h3>{metric_name}</h3>
-                                <table style="width: 100%; margin-top: 10px; color: white;">
-                                    <tr>
-                                        <td style="padding: 5px; text-align: left;"><b>Average:</b></td>
-                                        <td style="padding: 5px; text-align: right;">{stats["Average"]:.2f}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 5px; text-align: left;"><b>Maximum:</b></td>
-                                        <td style="padding: 5px; text-align: right;">{stats["Maximum"]:.2f}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 5px; text-align: left;"><b>Minimum:</b></td>
-                                        <td style="padding: 5px; text-align: right;">{stats["Minimum"]:.2f}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 5px; text-align: left;"><b>Total:</b></td>
-                                        <td style="padding: 5px; text-align: right;">{stats["Total"]:.2f}</td>
-                                    </tr>
-                                </table>
-                            </div>
-                        """, unsafe_allow_html=True)
-        else:
-            st.warning("No data available for the last 30 days view.")
 
     if df_trend.empty:
         st.warning("No trend data found for previous same weekdays.")
