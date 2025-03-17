@@ -45,44 +45,12 @@ st.markdown("""
         }
 
         /* Headers styling */
-        # Replace the existing header styling in the CSS section with:
-
-/* Headers styling */
-h1, h2, h3 {
-    color: #e94560 !important;
-    font-family: 'DejaVu Sans', sans-serif;
-    font-weight: 700 !important;
-    letter-spacing: 0.5px;
-    text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3) !important;
-    margin-bottom: 20px !important;
-}
-
-h1 {
-    font-size: 36px !important;
-}
-
-h2 {
-    font-size: 30px !important;
-    background: -webkit-linear-gradient(#e94560, #ff6b6b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-h3 {
-    font-size: 24px !important;
-}
-
-/* Add this for section headers */
-.section-header {
-    padding: 12px 20px;
-    background: linear-gradient(90deg, #0f3460, #e94560);
-    border-radius: 8px;
-    margin: 30px 0 20px 0;
-    color: white !important;
-    text-align: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    -webkit-text-fill-color: white !important;
-}
+        h1, h2, h3 {
+            color: #e94560 !important;
+            font-family: 'Helvetica Neue', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
 
         /* Premium Card Styling */
 .stAlert {
@@ -172,7 +140,7 @@ mpl.rcParams['grid.color'] = '#1a1a2e'
 mpl.rcParams['axes.grid'] = True
 mpl.rcParams['grid.alpha'] = 0.3
 mpl.rcParams['axes.edgecolor'] = '#e94560'
-mpl.rcParams['font.family'] = 'DejaVu Sans'
+mpl.rcParams['font.family'] = 'Helvetica'
 mpl.rcParams['font.weight'] = 'medium'
 
 # Add a premium logo to the sidebar
@@ -198,7 +166,7 @@ if uploaded_file is None:
     st.markdown(
         """
         <div style="text-align: center; margin-top: 50px; padding: 40px; background: rgba(15, 52, 96, 0.7); border-radius: 20px; border: 2px solid #e94560;" class="premium-card">
-            <h1 style="color: #e94560; font-size: 36px; margin-bottom: 20px;">📊 Welcome to DMAT-Trend Analytics Dashboard</h1>
+            <h1 style="color: #e94560; font-size: 36px; margin-bottom: 20px;">📊 Welcome to DMAT-Trend Premium Analytics</h1>
             <p style="font-size: 20px; color: #e7e7e7; margin-bottom: 30px;">
                 Upload a CSV file from the sidebar to generate comprehensive trend insights and visualizations.
             </p>
@@ -335,7 +303,7 @@ if uploaded_file is not None:
     # Add premium dashboard header
     st.markdown(f"""
         <div style="background: linear-gradient(90deg, #0f3460, #e94560); padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
-            <h1 style="text-align: center; color: white; margin: 0; font-size: 32px;">Hours Trend Analysis</h1>
+            <h1 style="text-align: center; color: white; margin: 0; font-size: 32px;">Premium Trend Analysis</h1>
             <p style="text-align: center; color: white; margin: 5px 0 0 0; font-size: 18px;">{selected_employer} | {selected_date.strftime('%B %d, %Y')}</p>
         </div>
     """, unsafe_allow_html=True)
@@ -392,68 +360,74 @@ if uploaded_file is not None:
         for title, (avg, reflected, difference) in metrics_results.items():
             st.markdown(display_summary(title, avg, reflected, difference), unsafe_allow_html=True)
 
-    # Create a premium centered title with proper styling
+    # Create a premium centered title
     st.markdown("""
-        <div style="
-            background: linear-gradient(90deg, #0f3460, #e94560);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 30px 0 20px 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        ">
-            <h2 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Key Performance Indicators</h2>
-        </div>
-    """, unsafe_allow_html=True)
+            <h2 style='text-align: center; color: #e94560; font-weight: bold; margin-bottom: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);'>
+                Key Performance Indicators
+            </h2>
+        """, unsafe_allow_html=True)
 
-    # Create columns for displaying summary boxes
+    # Create 4 columns for displaying premium summary boxes
     cols = st.columns(4)
 
 
-    def display_summary(col, title, avg, reflected, difference, icon="ℹ️"):
+    def display_summary(col, title, avg, reflected, difference):
         """
-        Function to display a visually enhanced summary box with animations.
+        Function to display a visually enhanced premium summary box.
         """
         # Define colors and icons based on the difference value
         if difference < 0:
-            bg_gradient = "linear-gradient(45deg, #ff7675, #d63031)"
-            text_color = "#ffffff"
-            icon_color = "#fab1a0"
-            diff_icon = "📉"
+            bg_color = "linear-gradient(135deg, rgba(231, 76, 60, 0.3), rgba(231, 76, 60, 0.1))"
+            text_color = "#e74c3c"
+            icon = "🔻"
+            border_color = "#e74c3c"
         else:
-            bg_gradient = "linear-gradient(45deg, #55efc4, #00b894)"
-            text_color = "#ffffff"
-            icon_color = "#c6f6d5"
-            diff_icon = "📈"
+            bg_color = "linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(46, 204, 113, 0.1))"
+            text_color = "#2ecc71"
+            icon = "▲"
+            border_color = "#2ecc71"
 
-        # Simplified HTML structure that will render properly in Streamlit
-        html = f"""
-            <div style="background: {bg_gradient}; border-radius: 12px; padding: 20px; 
-                        text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
-                        height: 100%; color: {text_color};">
-                <div style="font-size: 2.5rem; margin-bottom: 10px; color: {icon_color};">{icon}</div>
-                <h3 style="margin: 0; font-weight: bold;">{title}</h3>
-                <div style="display: flex; justify-content: space-between; margin-top: 15px;">
-                    <div style="text-align: center; flex: 1;">
-                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Average</p>
-                        <p style="margin: 5px 0; font-size: 1.4rem; font-weight: bold;">{avg:.1f}</p>
-                    </div>
-                    <div style="text-align: center; flex: 1;">
-                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Current</p>
-                        <p style="margin: 5px 0; font-size: 1.4rem; font-weight: bold;">{reflected:.1f}</p>
-                    </div>
-                </div>
-                <div style="background-color: rgba(255,255,255,0.2); border-radius: 30px; 
-                            padding: 8px 15px; margin-top: 15px; display: inline-block;">
-                    <span style="font-weight: bold;">
-                        {diff_icon} {abs(difference):.1f}%
-                    </span>
-                </div>
-            </div>
+        # Format difference with a premium design
+        formatted_diff = f"""
+                <span style='color:{text_color}; font-size: 22px; font-weight: bold;'>
+                    {icon} {difference:.2f}%
+                </span>
             """
 
-        # Render the HTML
-        col.markdown(html, unsafe_allow_html=True)
+        # Premium card-style summary box
+        summary_html = f"""
+                <div style="
+                    background: {bg_color};
+                    border-radius: 12px;
+                    padding: 20px;
+                    text-align: center;
+                    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+                    font-family: 'Helvetica Neue', sans-serif;
+                    transition: transform 0.3s, box-shadow 0.3s;
+                    border: 1px solid {border_color};
+                    margin-bottom: 15px;
+                " onmouseover="this.style.transform='scale(1.03)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.3)';" 
+                  onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.2)';">
+                    <h3 style="margin: 0 0 10px 0; color: #e7e7e7; font-weight: bold;">{title}</h3>
+
+                    <div style="display: flex; justify-content: space-between; margin: 15px 0;">
+                        <div style="text-align: center; flex: 1;">
+                            <p style="margin: 0; color: #bdc3c7; font-size: 14px;">AVERAGE</p>
+                            <p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #e7e7e7;">{avg:.2f}</p>
+                        </div>
+                        <div style="text-align: center; flex: 1;">
+                            <p style="margin: 0; color: #bdc3c7; font-size: 14px;">CURRENT</p>
+                            <p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #e7e7e7;">{reflected:.2f}</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(189, 195, 199, 0.3);">
+                        {formatted_diff}
+                    </div>
+                </div>
+            """
+
+        col.markdown(summary_html, unsafe_allow_html=True)
 
 
     # Display summaries dynamically across columns
@@ -506,11 +480,10 @@ if uploaded_file is not None:
         # Premium tick parameters
         ax.tick_params(axis='both', colors='#e7e7e7', labelsize=10)
 
-        # Premium styled spines with improved visibility
+        # Premium styled spines
         for spine in ax.spines.values():
             spine.set_color('#e94560')
-            spine.set_linewidth(2)  # Increased from 1 to 2
-            spine.set_visible(True)
+            spine.set_linewidth(1)
 
         # Adding premium data labels
         for i, txt in enumerate(y):
@@ -616,13 +589,12 @@ if uploaded_file is not None:
 
             st.pyplot(fig)
 
-
-    # And for the Time Period Analysis section:
+    # Premium time period analysis section
     st.markdown(f"""
-        <h2 class="section-header" style='text-align: center; font-weight: bold;'>
-            Time Period Analysis for {selected_employer}
-        </h2>
-    """, unsafe_allow_html=True)
+            <h2 style='text-align: center; color: #e94560; font-weight: bold; margin: 30px 0 20px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);'>
+                Time Period Analysis for {selected_employer}
+            </h2>
+        """, unsafe_allow_html=True)
 
     # Premium styled tabs
     tab1, tab2 = st.tabs(["📊 Last 7 Days View", "📈 Last 30 Days View"])
@@ -684,25 +656,19 @@ if uploaded_file is not None:
                 ax.set_facecolor('#f8f9fa')  # Lighter background
                 fig.patch.set_facecolor('#f8f9fa')
                 ax.set_xlabel("Date", fontsize=11, fontweight='bold', color='#34495e')
-                ax.set_ylabel("Total Hours", fontsize=13, fontweight='bold', color='black')
-
+                ax.set_ylabel("Total Hours", fontsize=11, fontweight='bold', color='#34495e')
                 ax.set_title(f"Total Hours (Last 30 Days) for {selected_employer}", fontsize=14, fontweight='bold',
                              color='#2c3e50', pad=15)
-                ax.grid(True, linestyle='--', alpha=0.5, color='#34495e', axis='y')
+                ax.grid(True, linestyle='--', alpha=0.5, color='#dddddd', axis='y')
 
                 # Format x-axis dates with better spacing
                 ax.set_xticks(df_last_30_days["Date"])
-                ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%b %d'), rotation=45, ha='right', fontsize=11, color='black', fontweight='bold')
+                ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%b %d'), rotation=45, ha='right', fontsize=9)
 
-
-                # Enhanced spines with better visibility
+                # Add subtle spines
                 for spine in ax.spines.values():
-                    spine.set_color('#34495e')  # Darker color for better visibility
-                    spine.set_linewidth(1.5)  # Thicker line
-                    spine.set_visible(True)  # Ensure they're visible
-                    # Improve axis label visibility
-                    ax.tick_params(axis='x', colors='black', labelsize=11)
-                    ax.tick_params(axis='y', colors='black', labelsize=11)
+                    spine.set_color('#dddddd')
+                    spine.set_linewidth(0.8)
 
                 # Y-axis scaling options
                 if y_axis_option == "Start from Zero":
@@ -715,6 +681,13 @@ if uploaded_file is not None:
                     ax.set_ylim(bottom=global_min, top=global_max)
 
 
+                # Add moving average for additional insight
+                window = min(5, len(df_last_30_days))  # Use 5-day moving average if enough data points
+                if len(df_last_30_days) >= 3:
+                    y_ma = df_last_30_days["Total Hours(Enrolled + Unenrolled)"].rolling(window=window,
+                                                                                         min_periods=1).mean()
+                    ax.plot(df_last_30_days["Date"], y_ma, "--", color="#e74c3c", linewidth=1.8, alpha=0.8,
+                            label=f"{window}-Day Avg")
 
                 # Enhanced legend
                 ax.legend(frameon=True, fancybox=True, framealpha=0.9, fontsize=10, loc='upper right',
@@ -765,10 +738,8 @@ if uploaded_file is not None:
 
                     # Format x-axis dates with better labels
                     ax.set_xticks(df_last_30_days["Date"])
-                    ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%b %d'), rotation=45, ha='right', fontsize=11, color='black', fontweight='bold')
-                    # Improve axis label visibility
-                    ax.tick_params(axis='x', colors='black', labelsize=11)
-                    ax.tick_params(axis='y', colors='black', labelsize=11)
+                    ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%b %d'), rotation=45, ha='right',
+                                       fontsize=9)
 
                     # Add subtle spines
                     for spine in ax.spines.values():
@@ -783,6 +754,13 @@ if uploaded_file is not None:
                         global_max = df[df["Employer"] == selected_employer]["Enrolled Hours-Hourly"].max() * 1.07
                         ax.set_ylim(bottom=global_min, top=global_max)
 
+
+                    # Add moving average
+                    window = min(5, len(df_last_30_days))
+                    if len(df_last_30_days) >= 3:
+                        y_ma = df_last_30_days["Enrolled Hours-Hourly"].rolling(window=window, min_periods=1).mean()
+                        ax.plot(df_last_30_days["Date"], y_ma, "--", color="#e74c3c", linewidth=1.8, alpha=0.8,
+                                label=f"{window}-Day Avg")
 
                     # Enhanced legend
                     ax.legend(frameon=True, fancybox=True, framealpha=0.9, fontsize=10, loc='upper right',
@@ -828,7 +806,7 @@ if uploaded_file is not None:
                         # Determine trend color and icon
                         trend_color = "#4CAF50" if stats["Trend"] == "+" else "#FF5252"
                         trend_icon = "↗" if stats["Trend"] == "+" else "↘"
-                        trend_value = f"{abs(z_enrolled[0] * 100):.2f}%"
+                        trend_value = f"{abs(z[0] * 100):.2f}%" if metric_name == "Total Hours" else f"{abs(z_enrolled[0] * 100):.2f}%"
 
                         # Create premium-styled card with proper HTML escaping
                         st.markdown(f"""
@@ -870,139 +848,48 @@ if uploaded_file is not None:
                             </div>
                         """, unsafe_allow_html=True)
 
-                else:
-                    st.warning("No data available for the last 30 days view.")
             else:
-                st.info("Please upload a CSV file to start.")
-# Add a premium section header for the trend data table with more spacing
-st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)  # Add space before the section
+                st.warning("No data available for the last 30 days view.")
 
-# Check if a file has been uploaded before trying to use selected_employer
-if uploaded_file is not None:
-    st.markdown(f"""
-        <h2 class="section-header" style='text-align: center; font-weight: bold;'>
-            Historical Trend Data for {selected_employer}
-        </h2>
-    """, unsafe_allow_html=True)
-
-    # Display trend data with enhanced styling and download option
-    if df_trend.empty:
-        st.warning("No trend data found for previous same weekdays.")
-    else:
-        # Create a container for better spacing and organization
-        with st.container():
-
-            with col1:
-                st.markdown("""
-                <h3 style="margin-top: 10px; margin-bottom: 5px; color: #e94560;">Complete Trend Analysis Dataset</h3>
-            """, unsafe_allow_html=True)
-
-        with col2:
-            # Generate CSV download button with improved styling
-            csv = df_trend.to_csv(index=False)
+        # Display trend data with enhanced styling if available
+        if df_trend.empty:
+            st.warning("No trend data found for previous same weekdays.")
+        else:
+            st.markdown("### Trend Analysis")
             st.markdown("""
                 <style>
-                /* Custom styling for the download button */
-                div[data-testid="stDownloadButton"] button {
-                    background-color: #0a2040 !important;
-                    color: #FFFF00 !important; /* Bright yellow text for maximum contrast */
-                    border: 2px solid #e94560 !important;
-                    padding: 10px !important;
-                    font-weight: 800 !important;
-                    font-size: 16px !important;
-                    border-radius: 8px !important;
-                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
-                    text-shadow: 1px 1px 2px #000000 !important;
-                    transition: all 0.3s ease !important;
-                    width: 100% !important;
-                    margin-top: 10px !important;
+                .trend-table {
+                    border-collapse: collapse;
+                    margin: 25px 0;
+                    font-size: 0.9em;
+                    font-family: sans-serif;
+                    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                    border-radius: 8px;
+                    overflow: hidden;
                 }
-                div[data-testid="stDownloadButton"] button:hover {
-                    background-color: #e94560 !important;
-                    color: #FFFFFF !important;
-                    border-color: #0a2040 !important;
-                    transform: translateY(-2px) !important;
-                    box-shadow: 0 6px 15px rgba(233, 69, 96, 0.4) !important;
+                .trend-table thead tr {
+                    background-color: #2c3e50;
+                    color: #fff;
+                    text-align: left;
                 }
-                div[data-testid="stDownloadButton"] svg {
-                    margin-right: 5px !important;
-                    fill: #FFFF00 !important; /* Match the text color */
+                .trend-table th, .trend-table td {
+                    padding: 12px 15px;
                 }
-                div[data-testid="stDownloadButton"] p {
-                    color: #FFFF00 !important; /* Also style any text within the button */
+                .trend-table tbody tr {
+                    border-bottom: 1px solid #dddddd;
+                }
+                .trend-table tbody tr:nth-of-type(even) {
+                    background-color: #f8f9fa;
+                }
+                .trend-table tbody tr:last-of-type {
+                    border-bottom: 2px solid #2c3e50;
                 }
                 </style>
             """, unsafe_allow_html=True)
 
-            st.download_button(
-                label="📥 Download Data",
-                data=csv,
-                file_name=f"{selected_employer}_trend_data.csv",
-                mime="text/csv",
-                key="download-csv",
-                help="Download the complete trend dataset as CSV",
-                use_container_width=True,
-            )
+            # Convert the DataFrame to an HTML table with custom styling
+            html_table = df_trend.to_html(classes="trend-table", escape=False, index=False)
+            st.markdown(html_table, unsafe_allow_html=True)
 
-        # Add premium styling for the table
-        st.markdown("""
-            <style>
-            .trend-table {
-                border-collapse: collapse;
-                margin: 20px 0;
-                font-size: 0.9em;
-                font-family: 'DejaVu Sans', sans-serif;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-                border-radius: 12px;
-                overflow: hidden;
-                width: 100%;
-            }
-            .trend-table thead tr {
-                background: linear-gradient(90deg, #0f3460, #e94560);
-                color: #fff;
-                text-align: center;
-                font-weight: bold;
-            }
-            .trend-table th, .trend-table td {
-                padding: 12px 15px;
-                text-align: center;
-            }
-            .trend-table tbody tr {
-                border-bottom: 1px solid rgba(15, 52, 96, 0.1);
-                background-color: rgba(15, 52, 96, 0.05);
-            }
-            .trend-table tbody tr:nth-of-type(even) {
-                background-color: rgba(15, 52, 96, 0.1);
-            }
-            .trend-table tbody tr:hover {
-                background-color: rgba(233, 69, 96, 0.1);
-                transition: all 0.3s ease;
-            }
-            .trend-table tbody tr:last-of-type {
-                border-bottom: 3px solid #e94560;
-            }
-            </style>
-        """, unsafe_allow_html=True)
-
-        # Convert the DataFrame to an HTML table with custom styling
-        html_table = df_trend.to_html(classes="trend-table", escape=False, index=False)
-        st.markdown(html_table, unsafe_allow_html=True)
-
-        # Add info card below the table
-        st.markdown("""
-            <div style="
-                padding: 15px; 
-                border-radius: 12px; 
-                background: linear-gradient(135deg, rgba(15, 52, 96, 0.85), rgba(233, 69, 96, 0.85)); 
-                border: 2px solid #e94560; 
-                margin-top: 20px;
-                margin-bottom: 30px;
-                box-shadow: 2px 2px 10px rgba(233, 69, 96, 0.3);
-                text-align: center;
-            ">
-                <p style="color: white; margin: 0; font-size: 16px;">
-                    <span style="font-size: 20px;">ℹ️</span> 
-                    This table displays historical data for the same weekday, providing context for trend analysis
-                </p>
-            </div>
-        """, unsafe_allow_html=True)
+else:
+    st.info("Please upload a CSV file to start.")

@@ -1,0 +1,48 @@
+# Create columns for displaying summary boxes
+    cols = st.columns(4)
+
+
+    def display_summary(col, title, avg, reflected, difference, icon):
+        """
+        Function to display a visually enhanced summary box with animations.
+        """
+        # Define colors and icons based on the difference value
+        if difference < 0:
+            bg_gradient = "linear-gradient(45deg, #ff7675, #d63031)"
+            text_color = "#ffffff"
+            icon_color = "#fab1a0"
+            diff_icon = "📉"
+        else:
+            bg_gradient = "linear-gradient(45deg, #55efc4, #00b894)"
+            text_color = "#ffffff"
+            icon_color = "#c6f6d5"
+            diff_icon = "📈"
+
+        # Simplified HTML structure that will render properly in Streamlit
+        html = f"""
+        <div style="background: {bg_gradient}; border-radius: 12px; padding: 20px; 
+                    text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+                    height: 100%; color: {text_color};">
+            <div style="font-size: 2.5rem; margin-bottom: 10px; color: {icon_color};">{icon}</div>
+            <h3 style="margin: 0; font-weight: bold;">{title}</h3>
+            <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                <div style="text-align: center; flex: 1;">
+                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Average</p>
+                    <p style="margin: 5px 0; font-size: 1.4rem; font-weight: bold;">{avg:.1f}</p>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Current</p>
+                    <p style="margin: 5px 0; font-size: 1.4rem; font-weight: bold;">{reflected:.1f}</p>
+                </div>
+            </div>
+            <div style="background-color: rgba(255,255,255,0.2); border-radius: 30px; 
+                        padding: 8px 15px; margin-top: 15px; display: inline-block;">
+                <span style="font-weight: bold;">
+                    {diff_icon} {abs(difference):.1f}%
+                </span>
+            </div>
+        </div>
+        """
+
+        # Render the HTML
+        col.markdown(html, unsafe_allow_html=True)

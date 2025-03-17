@@ -1,0 +1,1104 @@
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import datetime
+from PIL import Image
+import os
+import matplotlib as mpl
+from matplotlib.colors import LinearSegmentedColormap, to_rgba
+
+# Set page config with a modern layout
+st.set_page_config(
+    layout="wide",
+    page_title="Trend Dashboard",
+    page_icon=":bar_chart:",
+    initial_sidebar_state="expanded"
+)
+
+# Enhanced Custom CSS for styling - more professional gradient and typography
+st.markdown("""
+    <style>
+        /* Main background with premium gradient */
+        .stApp {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+        }
+
+        /* Enhance text readability */
+        .stMarkdown, p, h1, h2, h3, h4, h5 {
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Improve sidebar text visibility */
+        .sidebar .stMarkdown, .sidebar p, .sidebar h1, .sidebar h2, .sidebar h3, .sidebar h4, .sidebar h5,
+        .css-1d391kg, .css-12oz5g7, .st-ae, .st-af, .st-ag, .st-ah, .st-ai, .st-aj {
+            color: white !important;
+            text-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Make sure sidebar labels and text are visible */
+        .sidebar .stRadio label, .sidebar .stSelectbox label, .sidebar label,
+        .sidebar .stRadio span, .sidebar .stSelectbox span, .sidebar span {
+            color: white !important;
+            font-weight: 600;
+            text-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Styling for sidebar sections */
+        .sidebar [data-testid="stVerticalBlock"] > div {
+            background-color: rgba(0, 72, 124, 0.3);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Styling for sidebar header sections */
+        .sidebar .sidebar-header {
+            background-color: rgba(0, 50, 100, 0.5);
+            border-radius: 8px;
+            padding: 8px 15px;
+            margin-bottom: 8px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            top: -5px;
+        }
+
+        /* Style file uploader section */
+        .sidebar .file-uploader-section {
+            background-color: rgba(0, 72, 124, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 15px;
+        }
+
+        /* Style sidebar */
+        .css-1d391kg, .css-12oz5g7 {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            padding: 20px;
+        }
+
+        /* Enhance buttons */
+        .stButton>button {
+            background-color: #ffffff;
+            color: #1a2980;
+            border-radius: 5px;
+            font-weight: bold;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .stButton>button:hover {
+            background-color: #26d0ce;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Style selectbox */
+        .stSelectbox>div>div {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+        }
+
+        /* Style file uploader contents */
+        .stFileUploader > div {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 5px;
+            border: 1px solid rgba(0, 72, 124, 0.5) !important;
+        }
+
+        /* Style button in file uploader */
+        .stFileUploader button {
+            background-color: rgba(0, 72, 124, 0.8) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            font-weight: bold !important;
+            padding: 4px 15px !important;
+        }
+
+        .stFileUploader button:hover {
+            background-color: rgba(0, 100, 175, 0.9) !important;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.3) !important;
+        }
+
+        /* Style drop zone */
+        .stFileUploader [data-testid="stFileUploaderDropzone"] {
+            border: 2px dashed rgba(0, 72, 124, 0.5) !important;
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            padding: 15px !important;
+            border-radius: 5px !important;
+        }
+
+        /* Style file display area */
+        .stFileUploader [data-testid="stFileUploaderStatus"] {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            padding: 10px !important;
+            border-radius: 5px !important;
+            margin-top: 8px !important;
+            border: 1px solid rgba(0, 72, 124, 0.3) !important;
+        }
+
+        /* Style uploaded file icon and name */
+        .stFileUploader [data-testid="stMarkdownContainer"] {
+            color: rgba(0, 72, 124, 0.9) !important;
+            font-weight: 500 !important;
+        }
+
+        /* Style date input */
+        .stDateInput>div>div {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+        }
+
+        /* Make cards pop with shadow and animation */
+        div[data-testid="stVerticalBlock"] div[data-testid="stVerticalBlock"] {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        div[data-testid="stVerticalBlock"] div[data-testid="stVerticalBlock"]:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* Custom table styling */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        th {
+            background-color: #1a2980;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        tr:hover {
+            background-color: rgba(38, 208, 206, 0.1);
+        }
+
+        /* Style tabs */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 2px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 5px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            height: 50px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 5px;
+            color: #1a2980;
+            font-weight: bold;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: white;
+            color: #1a2980;
+        }
+        .stTabs [data-baseweb="tab-panel"] {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Smooth scrolling */
+        * {
+            scroll-behavior: smooth;
+        }
+
+        /* Animated loader */
+        .stSpinner > div {
+            border-color: #26d0ce #26d0ce transparent transparent !important;
+        }
+
+        /* Add logo animations */
+        .logo-container img {
+            transition: transform 1s ease;
+        }
+        .logo-container img:hover {
+            transform: rotate(360deg) scale(1.1);
+        }
+
+        /* Add fadeIn animation */
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .fadeIn {
+            animation: fadeIn 1.5s;
+        }
+
+        /* Add separator style */
+        .separator {
+            height: 3px;
+            background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.5), rgba(255,255,255,0));
+            margin: 15px 0 25px 0;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Set a professional matplotlib style for all plots
+plt.style.use('ggplot')
+mpl.rcParams['font.family'] = 'Segoe UI'
+mpl.rcParams['axes.facecolor'] = '#f8f9fa'
+mpl.rcParams['figure.facecolor'] = '#f8f9fa'
+mpl.rcParams['axes.grid'] = True
+mpl.rcParams['grid.alpha'] = 0.3
+mpl.rcParams['axes.linewidth'] = 0.5
+mpl.rcParams['axes.edgecolor'] = '#dddddd'
+
+# Create a modern color palette for charts
+colors = {
+    "enrolled_hours": "#3498db",
+    "hourly_enrolled": "#16a085",
+    "total_hours": "#8e44ad",
+    "employees_ta": "#e74c3c",
+    "secondary": "#f39c12",
+    "positive": "#2ecc71",
+    "negative": "#e74c3c"
+}
+
+# Sidebar layout enhancement
+with st.sidebar:
+    st.markdown("""
+        <div style="text-align: center; margin-bottom: 20px; background-color: rgba(0, 72, 124, 0.4); 
+        padding: 15px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.3);">
+            <h2 style="color: white; font-weight: bold; margin-bottom: 10px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">🌟 DMAT Analytics</h2>
+            <p style="color: white; opacity: 0.9; font-style: italic; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Version 2.0 Premium</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # File uploader with improved style - DIRECT STYLING
+    st.markdown("""
+        <div style="background-color: rgba(0, 72, 124, 0.6); padding: 8px 15px; margin-bottom: 10px; 
+        border-radius: 8px; color: white; font-weight: bold; border: 1px solid rgba(255, 255, 255, 0.3); 
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+            📊 Upload Data
+        </div>
+    """, unsafe_allow_html=True)
+
+    uploaded_file = st.file_uploader("", type=["csv"], label_visibility="collapsed")
+
+# Show welcome screen only when no file is uploaded
+if uploaded_file is None:
+    # Create a more engaging welcome screen
+    st.markdown(
+        """
+        <div style="text-align: center; margin-top: 50px; animation: fadeIn 1.5s;">
+            <h1 style="color: white; font-size: 3.5rem; font-weight: 800; text-shadow: 2px 4px 8px rgba(0,0,0,0.2);">
+                📊 Welcome to DMAT-Trend Analysis Dashboard
+            </h1>
+            <p style="font-size: 1.2rem; color: white; margin: 30px 0; max-width: 700px; margin-left: auto; margin-right: auto;">
+                Upload your CSV file from the sidebar to visualize trends and insights with our premium analytics engine.
+            </p>
+        </div>
+        <style>
+            @keyframes fadeIn {
+                0% { opacity: 0; transform: translateY(20px); }
+                100% { opacity: 1; transform: translateY(0); }
+            }
+
+            @keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-20px); }
+                100% { transform: translateY(0px); }
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Get absolute path to logo file
+    logo_path = os.path.join("assets", "logo.png")
+
+    # Check if logo file exists
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown(
+            '<div class="logo-container" style="text-align: center; animation: float 6s ease-in-out infinite;">',
+            unsafe_allow_html=True)
+        if os.path.exists(logo_path):
+            logo = Image.open(logo_path)
+            st.image(logo, use_container_width=True)
+        else:
+            # Fallback if logo not found - display a placeholder
+            st.markdown("""
+                <div style="background: rgba(255,255,255,0.2); height: 200px; border-radius: 10px; 
+                display: flex; align-items: center; justify-content: center; margin: 20px 0;">
+                    <h2 style="color: white;">DMAT Analytics</h2>
+                </div>
+            """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Add feature highlights
+    st.markdown("<h2 style='text-align: center; color: white; margin-top: 50px;'>Premium Features</h2>",
+                unsafe_allow_html=True)
+
+    feature_cols = st.columns(3)
+
+    features = [
+        {"icon": "📈", "title": "Advanced Trend Analysis",
+         "desc": "Intelligent visualization of time-series data with predictive insights"},
+        {"icon": "🔄", "title": "Multi-Period Comparison",
+         "desc": "Compare performance across different time periods with ease"},
+        {"icon": "📊", "title": "Interactive Reporting",
+         "desc": "Dynamic dashboard with filterable data views and exportable reports"}
+    ]
+
+    for i, feature in enumerate(features):
+        with feature_cols[i]:
+            st.markdown(f"""
+                <div style="background-color: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; 
+                backdrop-filter: blur(5px); height: 200px; text-align: center; transition: transform 0.3s ease; 
+                cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" 
+                onmouseout="this.style.transform='scale(1)'">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">{feature['icon']}</div>
+                    <h3 style="color: white; margin-bottom: 10px;">{feature['title']}</h3>
+                    <p style="color: rgba(255,255,255,0.8);">{feature['desc']}</p>
+                </div>
+            """, unsafe_allow_html=True)
+
+# Now process the file if uploaded
+if uploaded_file is not None:
+    try:
+        # Display a loading spinner with custom message
+        with st.spinner("Analyzing your data..."):
+            # Read the CSV file
+            df = pd.read_csv(uploaded_file)
+
+            # Check if the uploaded file has the specified headers
+            required_headers = [
+                "businessSystemID", "employerName", "date", "enrolledHoursSum",
+                "unEnrolledHoursSum", "enrolledSalariedSum", "unEnrolledSalariedSum",
+                "enrolledUserCount", "unEnrolledUserCount", "totalHours",
+                "employeesInTA", "lastTAFileProcessedDate", "receivingTime"
+            ]
+
+            # Check if the uploaded file contains all the required headers
+            if all(header in df.columns for header in required_headers):
+                # Create a mapping of original headers to expected dashboard headers
+                column_mapping = {
+                    "businessSystemID": "BranchID",
+                    "employerName": "Employer",
+                    "date": "Date",
+                    "enrolledHoursSum": "Enrolled Hours-Hourly",
+                    "enrolledUserCount": "HourlyEnrolledWorked",
+                    "totalHours": "Total Hours(Enrolled + Unenrolled)",
+                    "employeesInTA": "Employees in TA"
+                }
+
+                # Rename columns according to the mapping
+                df = df.rename(columns=column_mapping)
+
+                # Add a success message with animation
+                st.markdown("""
+                    <div style="background-color: rgba(46, 204, 113, 0.2); padding: 10px; border-left: 5px solid #2ecc71; 
+                    border-radius: 5px; margin: 10px 0; animation: slideIn 0.5s ease-out;">
+                        <h4 style="color: #2ecc71; margin: 0;">✅ Data Successfully Loaded</h4>
+                        <p style="margin: 5px 0 0 0; color: white;">Dashboard is now ready to display insights.</p>
+                    </div>
+                    <style>
+                        @keyframes slideIn {
+                            0% { transform: translateX(-20px); opacity: 0; }
+                            100% { transform: translateX(0); opacity: 1; }
+                        }
+                    </style>
+                """, unsafe_allow_html=True)
+
+            else:
+                # If not all required headers are present, check if the expected dashboard headers already exist
+                expected_headers = ["Employer", "Date", "Enrolled Hours-Hourly", "HourlyEnrolledWorked",
+                                    "Total Hours(Enrolled + Unenrolled)", "Employees in TA"]
+
+                if not all(header in df.columns for header in expected_headers):
+                    st.error(
+                        "The uploaded file doesn't have the expected column structure. Please ensure it has the correct headers.")
+                    st.info(
+                        "Expected headers: businessSystemID, employerName, date, enrolledHoursSum, enrolledUserCount, totalHours, employeesInTA, etc.")
+                    st.stop()
+    except Exception as e:
+        st.error(f"Error reading the uploaded file: {e}")
+        st.stop()
+
+    # Convert date column to datetime
+    df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
+    df = df.dropna(subset=["Date"])
+
+    # Create a header with breadcrumbs for better navigation
+    st.markdown("""
+        <div style="background-color: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; 
+        margin-bottom: 20px; backdrop-filter: blur(5px);">
+            <h1 style="color: white; margin: 0; font-size: 28px;">DMAT Trend Analysis Dashboard</h1>
+            <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">
+                <span style="opacity: 0.7;">Home</span> > <span style="opacity: 0.7;">Analytics</span> > <span>Dashboard</span>
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Enhanced sidebar with better organized controls
+    with st.sidebar:
+        st.markdown(
+            '<div style="background-color: rgba(0, 72, 124, 0.4); padding: 15px; border-radius: 10px; backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.3);">',
+            unsafe_allow_html=True)
+        st.markdown(
+            "<h4 style='color: white; margin-bottom: 15px; text-shadow: 0px 0px 3px rgba(0,0,0,0.4);'>📅 Date Selection</h4>",
+            unsafe_allow_html=True)
+        selected_date = st.date_input("", datetime.datetime.now())
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown(
+            '<div style="background-color: rgba(0, 72, 124, 0.4); padding: 15px; border-radius: 10px; margin-top: 20px; backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.3);">',
+            unsafe_allow_html=True)
+        st.markdown(
+            "<h4 style='color: white; margin-bottom: 15px; text-shadow: 0px 0px 3px rgba(0,0,0,0.4);'>🏢 Employer Selection</h4>",
+            unsafe_allow_html=True)
+        # Ensure there are employers to select from
+        if "Employer" in df.columns and not df["Employer"].empty:
+            selected_employer = st.selectbox("", df["Employer"].unique(), label_visibility="collapsed")
+        else:
+            st.error("No employer data found in the file")
+            st.stop()
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown(
+            '<div style="background-color: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-top: 20px; backdrop-filter: blur(5px);">',
+            unsafe_allow_html=True)
+        st.markdown(
+            "<h4 style='color: white; margin-bottom: 15px; text-shadow: 0px 0px 3px rgba(0,0,0,0.4);'>⚙️ Chart Settings</h4>",
+            unsafe_allow_html=True)
+        # Add option for y-axis scaling
+        y_axis_option = st.radio(
+            "Y-Axis Scaling",
+            ["Auto", "Fixed Range", "Start from Zero"],
+            index=0,
+            help="Auto: Intelligently scale based on data variance. Fixed Range: Use a consistent range for better comparison. Start from Zero: Show full scale from zero.",
+            key="y_axis_option"
+        )
+
+        # Add custom CSS to ensure radio button text is visible
+        st.markdown("""
+            <style>
+                .stRadio label {
+                    color: white !important;
+                    font-weight: 600 !important;
+                    text-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+                }
+
+                /* Style radio buttons */
+                .stRadio input[type="radio"] {
+                    border-color: white !important;
+                }
+
+                .stRadio input[type="radio"]:checked {
+                    border-color: white !important;
+                    background-color: white !important;
+                }
+
+                /* Style file uploader */
+                .stFileUploader > div {
+                    background-color: rgba(255, 255, 255, 0.95) !important;
+                }
+
+                /* Style date input */
+                .stDateInput > div {
+                    background-color: rgba(255, 255, 255, 0.95) !important;
+                    border-radius: 5px;
+                }
+
+                /* Style dropdowns */
+                .stSelectbox > div {
+                    background-color: rgba(255, 255, 255, 0.95) !important;
+                    border-radius: 5px;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # Filter data based on selection
+    df_selected_date = df[(df["Employer"] == selected_employer) & (df["Date"] == pd.to_datetime(selected_date))]
+    selected_weekday = pd.to_datetime(selected_date).weekday()
+    df_trend = df[(df["Employer"] == selected_employer) & (df["Date"].dt.weekday == selected_weekday)].copy()
+    df_trend = df_trend.sort_values(by="Date")
+
+    # Create a dataframe for the last 7 days data
+    end_date = pd.to_datetime(selected_date)
+    start_date = end_date - pd.Timedelta(days=6)
+    df_last_7_days = df[(df["Employer"] == selected_employer) &
+                        (df["Date"] >= start_date) &
+                        (df["Date"] <= end_date)].copy()
+    df_last_7_days = df_last_7_days.sort_values(by="Date")
+
+    # Create a dataframe for the last 30 days data
+    end_date_30 = pd.to_datetime(selected_date)
+    start_date_30 = end_date_30 - pd.Timedelta(days=29)
+    df_last_30_days = df[(df["Employer"] == selected_employer) &
+                         (df["Date"] >= start_date_30) &
+                         (df["Date"] <= end_date_30)].copy()
+    df_last_30_days = df_last_30_days.sort_values(by="Date")
+
+
+    # Summary Metrics Calculation
+    def calculate_summary(metric):
+        if metric not in df_trend.columns:
+            return 0, 0, 0
+
+        avg = df_trend[metric].mean() if not df_trend.empty else 0
+
+        reflected = df_selected_date[metric].values[
+            0] if metric in df_selected_date.columns and not df_selected_date.empty and len(
+            df_selected_date[metric].values) > 0 else 0
+        difference = ((reflected - avg) / avg * 100) if avg != 0 else 0
+        return avg, reflected, difference
+
+
+    # Calculate metrics only if they exist in the dataframe
+    metrics_to_calculate = [
+        ("Enrolled Hours-Hourly", "Enrolled Hours"),
+        ("HourlyEnrolledWorked", "Hourly Enrolled Worked"),
+        ("Total Hours(Enrolled + Unenrolled)", "Total Hours"),
+        ("Employees in TA", "Employees in TA")
+    ]
+
+    metrics_results = {}
+    for column_name, display_name in metrics_to_calculate:
+        if column_name in df.columns:
+            avg, reflected, difference = calculate_summary(column_name)
+            metrics_results[display_name] = (avg, reflected, difference)
+
+    # Dashboard header with date & company info - more prominent
+    st.markdown(f"""
+        <div style="background: linear-gradient(90deg, #1a2980, #26d0ce); padding: 20px; 
+        border-radius: 10px; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="margin: 0; color: white; font-weight: 600;">{selected_employer}</h2>
+                    <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.7);">
+                        Data for {selected_date.strftime('%A, %B %d, %Y')}
+                    </p>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); border-radius: 50px; padding: 8px 20px;">
+                    <p style="margin: 0; color: white; font-weight: 500;">PREMIUM DASHBOARD</p>
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Enhanced Summary Overview with modern cards
+    st.markdown("""
+        <h2 style='text-align: center; color: white; font-weight: bold; margin: 30px 0 20px 0; 
+        text-shadow: 0px 0px 3px rgba(0,0,0,0.4);'>
+            📊 Performance Overview
+        </h2>
+    """, unsafe_allow_html=True)
+
+    # Create columns for displaying summary boxes
+    cols = st.columns(4)
+
+
+    def display_summary(col, title, avg, reflected, difference, icon):
+        """
+        Function to display a visually enhanced summary box with animations.
+        """
+        # Define colors and icons based on the difference value
+        if difference < 0:
+            bg_gradient = "linear-gradient(45deg, #ff7675, #d63031)"
+            text_color = "#ffffff"
+            icon_color = "#fab1a0"
+            diff_icon = "📉"
+        else:
+            bg_gradient = "linear-gradient(45deg, #55efc4, #00b894)"
+            text_color = "#ffffff"
+            icon_color = "#c6f6d5"
+            diff_icon = "📈"
+
+        # Simplified HTML structure that will render properly in Streamlit
+        html = f"""
+        <div style="background: {bg_gradient}; border-radius: 12px; padding: 20px; 
+                    text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+                    height: 100%; color: {text_color};">
+            <div style="font-size: 2.5rem; margin-bottom: 10px; color: {icon_color};">{icon}</div>
+            <h3 style="margin: 0; font-weight: bold;">{title}</h3>
+            <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                <div style="text-align: center; flex: 1;">
+                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Average</p>
+                    <p style="margin: 5px 0; font-size: 1.4rem; font-weight: bold;">{avg:.1f}</p>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Current</p>
+                    <p style="margin: 5px 0; font-size: 1.4rem; font-weight: bold;">{reflected:.1f}</p>
+                </div>
+            </div>
+            <div style="background-color: rgba(255,255,255,0.2); border-radius: 30px; 
+                        padding: 8px 15px; margin-top: 15px; display: inline-block;">
+                <span style="font-weight: bold;">
+                    {diff_icon} {abs(difference):.1f}%
+                </span>
+            </div>
+        </div>
+        """
+
+        # Render the HTML
+        col.markdown(html, unsafe_allow_html=True)
+
+
+    # Icons for each metric
+    metric_icons = {
+        "Enrolled Hours": "⏱️",
+        "Hourly Enrolled Worked": "👥",
+        "Total Hours": "🔄",
+        "Employees in TA": "👨‍💼"
+    }
+
+    # Display summaries dynamically across columns
+    for i, (title, (avg, reflected, difference)) in enumerate(metrics_results.items()):
+        display_summary(cols[i % len(cols)], title, avg, reflected, difference, metric_icons[title])
+
+
+    # Enhanced plot styling function with combined features from both codes
+    def plot_trend(ax, x, y, title, xlabel, ylabel, color, marker):
+        # Set professional color scheme
+        background_color = '#f8f9fa'
+        grid_color = '#e0e0e0'
+        title_color = '#2c3e50'
+
+        # Set background color
+        ax.set_facecolor(background_color)
+        fig = ax.figure
+        fig.patch.set_facecolor(background_color)
+
+        # Plot the main line with improved styling
+        ax.plot(x, y, marker=marker, linestyle='-', color=color, linewidth=3,
+                markersize=9, markeredgewidth=2, markeredgecolor='white', label="Data")
+
+        # Add fill under the curve with a simpler approach
+        ax.fill_between(x, y, 0, alpha=0.2, color=color)
+
+        # Improved axis labels and title
+        ax.set_xlabel(xlabel, fontsize=12, fontweight='bold', color='#555555', labelpad=10)
+        ax.set_ylabel(ylabel, fontsize=12, fontweight='bold', color='#555555', labelpad=10)
+        ax.set_title(title, fontsize=16, fontweight='bold', color=title_color, pad=20)
+
+        # Refined grid styling
+        ax.grid(True, linestyle='--', alpha=0.5, color=grid_color, linewidth=0.8)
+
+        # Set x-ticks with better formatting and spacing
+        ax.set_xticks(x)
+        ax.set_xticklabels(x.dt.strftime('%b %d'), rotation=45, ha='right', fontsize=10, fontweight='bold')
+
+        # Customize tick parameters for a cleaner look
+        ax.tick_params(axis='both', colors='#555555', labelsize=10)
+
+        # Clean up spines
+        for spine in ax.spines.values():
+            spine.set_color('#bbbbbb')
+            spine.set_linewidth(1)
+
+        # Adding data labels with enhanced styling
+        for i, txt in enumerate(y):
+            label_color = '#333333'
+            ax.text(x.iloc[i], y.iloc[i] + (y.max() - y.min()) * 0.02,
+                    f"{txt:.1f}", fontsize=10, ha='center', fontweight='bold',
+                    va='bottom', color=label_color,
+                    bbox=dict(boxstyle="round,pad=0.3", fc='white', ec=color, alpha=0.9, linewidth=1.5))
+
+            # Add trend line with improved styling if there are multiple data points
+        if len(x) > 1:
+            try:
+                z = np.polyfit(range(len(x)), y, 1)
+                p = np.poly1d(z)
+                ax.plot(x, p(range(len(x))), "--", color="#ff7043", linewidth=2.5, alpha=0.9,
+                        label="Trend")
+            except Exception as e:
+                # In case of any error with the trend line, skip it
+                print(f"Warning: Could not plot trend line - {e}")
+
+        # Position the legend better
+        ax.legend(frameon=True, fontsize=11, loc='upper left', facecolor='white', framealpha=0.9,
+                  edgecolor='#dddddd', fancybox=True)
+
+        # Set y-axis based on selected option with improved padding and error handling
+        try:
+            if y_axis_option == "Start from Zero":
+                ax.set_ylim(bottom=0, top=y.max() * 1.15)
+            elif y_axis_option == "Auto":
+                if len(y) >= 2:
+                    # Avoid division by zero
+                    percent_change = abs((y.iloc[-1] - y.iloc[0]) / max(y.iloc[0], 0.001) * 100)
+
+                    if percent_change < 10:
+                        data_min = max(0, y.min() * 0.95)  # Ensure non-negative
+                        data_max = y.max() * 1.05
+                        ax.set_ylim(bottom=data_min, top=data_max)
+                    else:
+                        data_min = max(0, y.min() * 0.9)  # Ensure non-negative
+                        data_max = y.max() * 1.1
+                        ax.set_ylim(bottom=data_min, top=data_max)
+                else:
+                    # If only one data point, create sensible limits
+                    single_value = y.iloc[0]
+                    ax.set_ylim(bottom=max(0, single_value * 0.8),
+                                top=single_value * 1.2)
+            elif y_axis_option == "Fixed Range":
+                if not df.empty and y.name in df.columns:
+                    filtered_df = df[df["Employer"] == selected_employer]
+                    if not filtered_df.empty and y.name in filtered_df.columns:
+                        global_min = filtered_df[y.name].min() * 0.9
+                        global_max = filtered_df[y.name].max() * 1.1
+                        ax.set_ylim(bottom=max(0, global_min), top=global_max)
+        except Exception as e:
+            # Fallback to auto scale if any issue occurs
+            print(f"Warning: Y-axis scaling error - {e}. Using auto scale.")
+
+        # Calculate percentage change with enhanced display and error handling
+        try:
+            if len(y) >= 2 and abs(y.iloc[0]) > 0.0001:  # Avoid division by tiny numbers
+                percent_change = (y.iloc[-1] - y.iloc[0]) / abs(y.iloc[0]) * 100
+                change_color = "#e74c3c" if percent_change < 0 else "#2ecc71"
+                change_icon = "▼" if percent_change < 0 else "▲"
+
+                # Add percentage change annotation with improved styling
+                # Moved to bottom right corner to avoid overlapping with data points
+                ax.annotate(f"{change_icon}{abs(percent_change):.1f}% change",
+                            xy=(0.98, 0.05),
+                            xycoords='axes fraction',
+                            bbox=dict(boxstyle="round,pad=0.4", fc="white", ec=change_color, alpha=0.9, linewidth=1.5),
+                            ha='right',
+                            fontsize=10,
+                            fontweight='bold',
+                            color=change_color)
+        except Exception as e:
+            # Skip percentage annotation if there's an issue
+            print(f"Warning: Percentage change calculation error - {e}")
+
+            # Add a subtle shadow effect to the chart
+            ax.patch.set_alpha(0.7)
+
+        # Enhanced legend styling - placed in upper left corner to avoid overlap
+        legend = ax.legend(frameon=True, fancybox=True, framealpha=0.9,
+                           fontsize=10, loc='upper left',
+                           edgecolor='#cccccc')
+        legend.get_frame().set_facecolor('white')
+
+        # Adjust layout for better spacing
+        fig.tight_layout()
+
+
+    # Create a 2x2 grid of charts only for metrics that exist in the dataframe
+    chart_metrics = [
+        ("Enrolled Hours-Hourly", "Enrolled Hours Trend", "#00bcd4", 'o'),
+        ("HourlyEnrolledWorked", "Hourly Enrolled Worked Trend", "#e74c3c", 's'),
+        ("Total Hours(Enrolled + Unenrolled)", "Total Hours Trend", "#0096FF", 'd'),
+        ("Employees in TA", "Employees in TA Trend", "#8e44ad", 'x')
+    ]
+
+    # Filter metrics that exist in the dataframe
+    available_charts = [m for m in chart_metrics if m[0] in df.columns]
+
+    # Add a section title with styling
+    st.markdown('<div class="fadeIn">', unsafe_allow_html=True)
+    st.subheader("📈 Trend Analysis")
+    st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Create two-column layout for better organization of charts
+    col1, col2 = st.columns([2, 2])
+
+    # Position to place charts
+    positions = [col1, col2, col1, col2]
+
+    for i, (metric, title, color, marker) in enumerate(available_charts):
+        position = positions[i % len(positions)]
+
+        with position:
+            fig, ax = plt.subplots(figsize=(12, 6))
+            if not df_trend.empty and metric in df_trend.columns:
+                plot_trend(
+                    ax,
+                    df_trend["Date"],
+                    df_trend[metric],
+                    f"{title} for {selected_employer}",
+                    "Date",
+                    metric.replace("_", " "),
+                    color,
+                    marker
+                )
+            else:
+                ax.text(0.5, 0.5, f"No data available for {metric}",
+                        horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+
+            st.pyplot(fig)
+
+    # Add the seven-day and thirty-day views with tabs and enhanced styling
+    st.markdown('<div class="fadeIn">', unsafe_allow_html=True)
+    st.markdown(f"""<h2 style='text-align: center; color: white; text-shadow: 0px 0px 3px rgba(0,0,0,0.4);'>
+                Time Period Analysis for {selected_employer}</h2>""",
+                unsafe_allow_html=True)
+    st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Use tabs to organize the time period views with improved visibility
+    tab1, tab2 = st.tabs(["Last 7 Days View", "Last 30 Days View"])
+
+    # Add custom CSS to ensure tab text is visible
+    st.markdown("""
+        <style>
+            .stTabs [data-baseweb="tab"] {
+                color: white !important;
+                text-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+                font-weight: bold;
+            }
+            .stTabs [aria-selected="true"] {
+                background-color: white;
+                color: #1a2980 !important;
+                text-shadow: none;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    with tab1:
+        # Last 7 Days View
+        if "Total Hours(Enrolled + Unenrolled)" in df.columns and not df_last_7_days.empty:
+            fig, ax = plt.subplots(figsize=(12, 6))
+            plot_trend(
+                ax,
+                df_last_7_days["Date"],
+                df_last_7_days["Total Hours(Enrolled + Unenrolled)"],
+                f"Total Hours (Last 7 Days) for {selected_employer}",
+                "Date",
+                "Total Hours",
+                "#9C27B0",  # Purple color to differentiate from other charts
+                '^'  # Triangle marker for distinction
+            )
+            st.pyplot(fig)
+        else:
+            st.warning("No data available for the last 7 days view.")
+
+    with tab2:
+        # Last 30 Days View with Bar Charts
+        if "Total Hours(Enrolled + Unenrolled)" in df.columns and not df_last_30_days.empty:
+            col1, col2 = st.columns([1, 1])
+
+            # Main 30-day bar chart for Total Hours
+            with col1:
+                fig, ax = plt.subplots(figsize=(12, 6))
+
+                # Bar chart for Total Hours
+                bars = ax.bar(
+                    df_last_30_days["Date"],
+                    df_last_30_days["Total Hours(Enrolled + Unenrolled)"],
+                    color="#FF5722",
+                    alpha=0.8,
+                    width=0.7
+                )
+
+                # Add data labels on top of bars
+                for bar in bars:
+                    height = bar.get_height()
+                    ax.text(
+                        bar.get_x() + bar.get_width() / 2.,
+                        height + 1,
+                        f'{height:.1f}',
+                        ha='center',
+                        va='bottom',
+                        fontsize=8,
+                        rotation=45
+                    )
+
+                # Style the chart
+                ax.set_facecolor('#f9f9f9')
+                fig.patch.set_facecolor('#f9f9f9')
+                ax.set_xlabel("Date", fontsize=11, fontweight='bold', color='#555555')
+                ax.set_ylabel("Total Hours", fontsize=11, fontweight='bold', color='#555555')
+                ax.set_title(f"Total Hours (Last 30 Days) for {selected_employer}", fontsize=14, fontweight='bold',
+                             color='#2c3e50', pad=15)
+                ax.grid(True, linestyle='--', alpha=0.7, color='#dddddd', axis='y')
+
+                # Format x-axis dates
+                ax.set_xticks(df_last_30_days["Date"])
+                ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%Y-%m-%d'), rotation=45, ha='right',
+                                   fontsize=8)
+
+                # Y-axis scaling options
+                if y_axis_option == "Start from Zero":
+                    ax.set_ylim(bottom=0, top=df_last_30_days["Total Hours(Enrolled + Unenrolled)"].max() * 1.15)
+                elif y_axis_option == "Fixed Range":
+                    global_min = df[df["Employer"] == selected_employer][
+                                     "Total Hours(Enrolled + Unenrolled)"].min() * 0.93
+                    global_max = df[df["Employer"] == selected_employer][
+                                     "Total Hours(Enrolled + Unenrolled)"].max() * 1.07
+                    ax.set_ylim(bottom=global_min, top=global_max)
+
+                # Add trend line
+                x = np.arange(len(df_last_30_days))
+                y = df_last_30_days["Total Hours(Enrolled + Unenrolled)"].values
+                z = np.polyfit(x, y, 1)
+                p = np.poly1d(z)
+                ax.plot(df_last_30_days["Date"], p(x), "--", color="#2c3e50", linewidth=2, alpha=0.8,
+                        label="Trend Line")
+
+                # Add legend - moved to upper left to avoid overlaps
+                ax.legend(frameon=True, fancybox=True, framealpha=0.9, fontsize=10, loc='upper left',
+                          edgecolor='#cccccc')
+
+                fig.tight_layout()
+                st.pyplot(fig)
+
+            # Additional bar chart for 30-day Enrolled Hours
+            with col2:
+                if "Enrolled Hours-Hourly" in df.columns:
+                    fig, ax = plt.subplots(figsize=(12, 6))
+
+                    # Bar chart for Enrolled Hours
+                    bars = ax.bar(
+                        df_last_30_days["Date"],
+                        df_last_30_days["Enrolled Hours-Hourly"],
+                        color="#4CAF50",
+                        alpha=0.8,
+                        width=0.7
+                    )
+
+                    # Add data labels on top of bars
+                    for bar in bars:
+                        height = bar.get_height()
+                        ax.text(
+                            bar.get_x() + bar.get_width() / 2.,
+                            height + 1,
+                            f'{height:.1f}',
+                            ha='center',
+                            va='bottom',
+                            fontsize=8,
+                            rotation=45
+                        )
+
+                    # Style the chart
+                    ax.set_facecolor('#f9f9f9')
+                    fig.patch.set_facecolor('#f9f9f9')
+                    ax.set_xlabel("Date", fontsize=11, fontweight='bold', color='#555555')
+                    ax.set_ylabel("Enrolled Hours", fontsize=11, fontweight='bold', color='#555555')
+                    ax.set_title(f"Enrolled Hours (Last 30 Days) for {selected_employer}", fontsize=14,
+                                 fontweight='bold', color='#2c3e50', pad=15)
+                    ax.grid(True, linestyle='--', alpha=0.7, color='#dddddd', axis='y')
+
+                    # Format x-axis dates
+                    ax.set_xticks(df_last_30_days["Date"])
+                    ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%Y-%m-%d'), rotation=45, ha='right',
+                                       fontsize=8)
+
+                    # Y-axis scaling options
+                    if y_axis_option == "Start from Zero":
+                        ax.set_ylim(bottom=0, top=df_last_30_days["Enrolled Hours-Hourly"].max() * 1.15)
+                    elif y_axis_option == "Fixed Range":
+                        global_min = df[df["Employer"] == selected_employer]["Enrolled Hours-Hourly"].min() * 0.93
+                        global_max = df[df["Employer"] == selected_employer]["Enrolled Hours-Hourly"].max() * 1.07
+                        ax.set_ylim(bottom=global_min, top=global_max)
+
+                    # Add trend line
+                    x = np.arange(len(df_last_30_days))
+                    y = df_last_30_days["Enrolled Hours-Hourly"].values
+                    z = np.polyfit(x, y, 1)
+                    p = np.poly1d(z)
+                    ax.plot(df_last_30_days["Date"], p(x), "--", color="#2c3e50", linewidth=2, alpha=0.8,
+                            label="Trend Line")
+
+                    # Add legend - moved to upper left corner to avoid overlaps
+                    ax.legend(frameon=True, fancybox=True, framealpha=0.9, fontsize=10, loc='upper left',
+                              edgecolor='#cccccc')
+
+                    fig.tight_layout()
+                    st.pyplot(fig)
+                else:
+                    st.warning("No enrolled hours data available for the last 30 days view.")
+
+            # Monthly statistics summary
+            if not df_last_30_days.empty:
+                st.subheader("30-Day Statistics")
+
+                # Calculate monthly statistics
+                monthly_stats = {
+                    "Total Hours": {
+                        "Average": df_last_30_days["Total Hours(Enrolled + Unenrolled)"].mean(),
+                        "Maximum": df_last_30_days["Total Hours(Enrolled + Unenrolled)"].max(),
+                        "Minimum": df_last_30_days["Total Hours(Enrolled + Unenrolled)"].min(),
+                        "Total": df_last_30_days["Total Hours(Enrolled + Unenrolled)"].sum(),
+                    }
+                }
+
+                if "Enrolled Hours-Hourly" in df.columns:
+                    monthly_stats["Enrolled Hours"] = {
+                        "Average": df_last_30_days["Enrolled Hours-Hourly"].mean(),
+                        "Maximum": df_last_30_days["Enrolled Hours-Hourly"].max(),
+                        "Minimum": df_last_30_days["Enrolled Hours-Hourly"].min(),
+                        "Total": df_last_30_days["Enrolled Hours-Hourly"].sum(),
+                    }
+
+                # Display monthly statistics in a modern card format
+                metric_cols = st.columns(len(monthly_stats))
+
+                for i, (metric_name, stats) in enumerate(monthly_stats.items()):
+                    with metric_cols[i]:
+                        st.markdown(f"""
+                        <div style="
+                            background: linear-gradient(135deg, #2980b9, #2c3e50);
+                            border-radius: 10px;
+                            padding: 15px;
+                            color: white;
+                            text-align: center;
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                        ">
+                            <h3>{metric_name}</h3>
+                            <table style="width: 100%; margin-top: 10px; color: white;">
+                                <tr>
+                                    <td style="padding: 5px; text-align: left;"><b>Average:</b></td>
+                                    <td style="padding: 5px; text-align: right;">{stats["Average"]:.2f}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px; text-align: left;"><b>Maximum:</b></td>
+                                    <td style="padding: 5px; text-align: right;">{stats["Maximum"]:.2f}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px; text-align: left;"><b>Minimum:</b></td>
+                                    <td style="padding: 5px; text-align: right;">{stats["Minimum"]:.2f}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px; text-align: left;"><b>Total:</b></td>
+                                    <td style="padding: 5px; text-align: right;">{stats["Total"]:.2f}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.warning("No data available for the last 30 days view.")
+
+    # Display trend data table with enhanced styling
+    if df_trend.empty:
+        st.warning("No trend data found for previous same weekdays.")
+    else:
+        st.markdown('<div class="fadeIn">', unsafe_allow_html=True)
+        st.subheader("📋 Detailed Trend Data")
+        st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.write(df_trend)
+
+else:
+    st.info("Please upload a CSV file to start.")
