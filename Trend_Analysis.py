@@ -221,13 +221,17 @@ if st.session_state.get('show_analytics', False):
         </div>
     """, unsafe_allow_html=True)
 
-    # Show the analytics dashboard
-    streamlit_analytics.stop_tracking(
-        unsafe_password=None  # No password needed as we've already authenticated
-    )
+    # Show the analytics dashboard - version 0.4.1 compatible
+    streamlit_analytics.stop_tracking()  # No parameters at all
 
     # Stop execution to only show analytics
     st.stop()
+
+    # Old way (deprecated)
+    # st.experimental_set_query_params(param=value)
+
+    # New way (current)
+    st.query_params.param = value
 
 uploaded_file = st.sidebar.file_uploader("", type=["csv"])
 
