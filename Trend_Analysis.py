@@ -222,10 +222,10 @@ if st.session_state.get('show_analytics', False):
     """, unsafe_allow_html=True)
 
     # Show the analytics dashboard - version 0.4.1 compatible
-    streamlit_analytics.stop_tracking()  # No parameters at all
+    #streamlit_analytics.stop_tracking()  # No parameters at all
 
     # Stop execution to only show analytics
-    st.stop()
+    #st.stop()
 
     # Old way (deprecated)
     # st.experimental_set_query_params(param=value)
