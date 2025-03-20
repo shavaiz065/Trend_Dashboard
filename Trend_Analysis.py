@@ -9,6 +9,8 @@ import os
 import matplotlib as mpl
 import streamlit_analytics
 
+# Start tracking analytics right after imports
+streamlit_analytics.start_tracking()
 
 # Set page config with a modern layout
 st.set_page_config(
@@ -1010,3 +1012,10 @@ if uploaded_file is not None:
                 </p>
             </div>
         """, unsafe_allow_html=True)
+
+# Add analytics tracking at the very end
+streamlit_analytics.stop_tracking(
+    unsafe_password="dmat-dashboard",  # Change this to your preferred password
+    hide_from_viewers=True,
+    dark_mode=True  # Matches your dark dashboard theme
+)
