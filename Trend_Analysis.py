@@ -55,7 +55,7 @@ def inject_ga():
 
 def send_ga_page_view():
     measurement_id = "G-BX7EVCVJW5"  # Your Google Analytics ID
-    api_secret = "YOUR_API_SECRET"  # Get from Google Analytics Admin > Data Streams
+    api_secret = "F1DBh04GTFW_ggM-N7R08w"  # Get from Google Analytics Admin > Data Streams
     client_id = "123456.7890123456"  # Unique visitor ID (could be random)
 
     url = f"https://www.google-analytics.com/mp/collect?measurement_id={measurement_id}&api_secret={api_secret}"
@@ -71,9 +71,6 @@ def send_ga_page_view():
 # Call function when the app starts
 send_ga_page_view()
 
-# Your Streamlit app starts here
-st.title("My Streamlit App")
-st.write("This page is being tracked using Google Analytics API.")
 
 # Enhanced custom CSS for a premium look
 st.markdown("""
