@@ -7,6 +7,14 @@ import datetime
 from PIL import Image
 import os
 import matplotlib as mpl
+import streamlit_analytics
+
+# Any configuration or setup code remains outside
+
+# Wrap your entire app in the tracking block
+with streamlit_analytics.track(unsafe_password="ayzal@2022+1"):
+    # Your entire existing app code should be indented inside this block
+    st.title("Trend Analytics Dashboard")
 
 # Set page config with a modern layout
 st.set_page_config(
