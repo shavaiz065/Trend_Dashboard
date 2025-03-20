@@ -224,7 +224,7 @@ if st.session_state.get('show_analytics', False):
     # Show the analytics dashboard
     streamlit_analytics.stop_tracking(
         unsafe_password=None,  # No password needed as we've already authenticated
-        hide_from_viewers=False,  # Show directly on the page
+        display_in_current_page=True,  # Use this instead of hide_from_viewers=False
         dark_mode=True
     )
 
