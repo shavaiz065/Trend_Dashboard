@@ -20,23 +20,39 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Google Analytics code comes after set_page_config
-def add_google_analytics():
-    components.html(
-        """
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-BX7EVCVJW5"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-BX7EVCVJW5');
-        </script>
+
+# Define a function to implement Google Analytics
+def inject_ga():
+    GA_ID = "G-BX7EVCVJW5"
+
+    # JavaScript with modified implementation
+    GA_JS = f"""
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+      gtag('config', '{GA_ID}', {{ 'send_page_view': true }});
+      console.log('Google Analytics loaded with ID: {GA_ID}');
+    </script>
+    """
+
+    # Inject the script via iframe to avoid Streamlit sanitization
+    components.iframe(
+        srcdoc=f"""
+        <html>
+        <head>{GA_JS}</head>
+        <body></body>
+        </html>
         """,
-        height=0
+        height=0,
+        width=0,
     )
 
-add_google_analytics()
+
+# Inject Google Analytics
+inject_ga()
 
 # Enhanced custom CSS for a premium look
 st.markdown("""
