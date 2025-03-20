@@ -231,7 +231,7 @@ if st.session_state.get('show_analytics', False):
     # st.experimental_set_query_params(param=value)
 
     # New way (current)
-    st.query_params.param = value
+    st.query_params
 
 uploaded_file = st.sidebar.file_uploader("", type=["csv"])
 
