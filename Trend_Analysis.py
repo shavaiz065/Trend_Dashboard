@@ -8,6 +8,8 @@ from PIL import Image
 import os
 import matplotlib as mpl
 import streamlit.components.v1 as components
+import requests
+
 
 #from streamlit_extras.stray import stray
 import streamlit_analytics
@@ -51,25 +53,27 @@ def inject_ga():
     )
 
 
-def inject_google_analytics():
-    GA_TAG = """
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BX7EVCVJW5"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+def send_ga_page_view():
+    measurement_id = "G-BX7EVCVJW5"  # Your Google Analytics ID
+    api_secret = "YOUR_API_SECRET"  # Get from Google Analytics Admin > Data Streams
+    client_id = "123456.7890123456"  # Unique visitor ID (could be random)
 
-      gtag('config', 'G-BX7EVCVJW5');
-    </script>
-    """
-    st.components.v1.html(GA_TAG, height=0)
+    url = f"https://www.google-analytics.com/mp/collect?measurement_id={measurement_id}&api_secret={api_secret}"
 
-# ✅ Inject analytics at the start of the script
-inject_google_analytics()
+    payload = {
+        "client_id": client_id,
+        "events": [{"name": "page_view"}]
+    }
 
-# Your Streamlit app content starts below
+    requests.post(url, json=payload)
+
+
+# Call function when the app starts
+send_ga_page_view()
+
+# Your Streamlit app starts here
 st.title("My Streamlit App")
-st.write("This page is now being tracked using Google Analytics.")
+st.write("This page is being tracked using Google Analytics API.")
 
 # Enhanced custom CSS for a premium look
 st.markdown("""
