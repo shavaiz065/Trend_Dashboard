@@ -7,16 +7,36 @@ import datetime
 from PIL import Image
 import os
 import matplotlib as mpl
+import streamlit.components.v1 as components
+
+#from streamlit_extras.stray import stray
 import streamlit_analytics
 
-
-# Set page config with a modern layout
+# First command must be set_page_config if you're using it
 st.set_page_config(
     layout="wide",
     page_title="Premium Trend Dashboard",
     page_icon="📊",
     initial_sidebar_state="expanded"
 )
+
+# Google Analytics code comes after set_page_config
+def add_google_analytics():
+    components.html(
+        """
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-BX7EVCVJW5"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-BX7EVCVJW5');
+        </script>
+        """,
+        height=0
+    )
+
+add_google_analytics()
 
 # Enhanced custom CSS for a premium look
 st.markdown("""
