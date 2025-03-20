@@ -227,6 +227,11 @@ if st.session_state.get('show_analytics', False):
     # Stop execution to only show analytics
     #st.stop()
 
+    # Show the analytics dashboard for version 0.4.1
+    streamlit_analytics.stop_tracking(
+        unsafe_password=None
+    )
+
     # Old way (deprecated)
     # st.experimental_set_query_params(param=value)
 
