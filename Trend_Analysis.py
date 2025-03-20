@@ -51,8 +51,25 @@ def inject_ga():
     )
 
 
-# Inject Google Analytics
-inject_ga()
+def inject_google_analytics():
+    GA_TAG = """
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BX7EVCVJW5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-BX7EVCVJW5');
+    </script>
+    """
+    st.components.v1.html(GA_TAG, height=0)
+
+# ✅ Inject analytics at the start of the script
+inject_google_analytics()
+
+# Your Streamlit app content starts below
+st.title("My Streamlit App")
+st.write("This page is now being tracked using Google Analytics.")
 
 # Enhanced custom CSS for a premium look
 st.markdown("""
