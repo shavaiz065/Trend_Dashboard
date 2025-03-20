@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-
 plt.rcParams['font.family'] = 'DejaVu Sans'  # Use a font available by default
 import numpy as np
 import datetime
@@ -10,8 +9,6 @@ import os
 import matplotlib as mpl
 import streamlit_analytics
 
-# Start tracking analytics right after imports
-streamlit_analytics.start_tracking()
 
 # Set page config with a modern layout
 st.set_page_config(
@@ -165,16 +162,6 @@ h3 {
     </style>
 """, unsafe_allow_html=True)
 
-# Add a password check in the sidebar for analytics access
-with st.sidebar.expander("📊 Admin Analytics", expanded=False):
-    analytics_password = st.text_input("Enter admin password to view analytics", type="password")
-    show_analytics = st.checkbox("Show analytics dashboard", value=False)
-
-    if analytics_password == "dmat-dashboard" and show_analytics:
-        st.session_state.show_analytics = True
-    else:
-        st.session_state.show_analytics = False
-
 # Configure matplotlib for a premium look
 plt.style.use('dark_background')
 mpl.rcParams['axes.facecolor'] = '#16213e'
@@ -206,41 +193,8 @@ st.sidebar.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Show analytics dashboard if password is correct
-if st.session_state.get('show_analytics', False):
-    st.markdown("""
-        <div style="
-            background: linear-gradient(90deg, #0f3460, #e94560);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        ">
-            <h2 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">DMAT-Trend Visitor Analytics</h2>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # Show the analytics dashboard - version 0.4.1 compatible
-    #streamlit_analytics.stop_tracking()  # No parameters at all
-
-    # Stop execution to only show analytics
-    #st.stop()
-
-    # Show the analytics dashboard for version 0.4.1
-    streamlit_analytics.stop_tracking(
-        unsafe_password=None
-    )
-
-    # Old way (deprecated)
-    # st.experimental_set_query_params(param=value)
-
-    # New way (current)
-    st.query_params
-
 uploaded_file = st.sidebar.file_uploader("", type=["csv"])
 
-# Rest of your app code remains unchanged
 # Show premium welcome screen only when no file is uploaded
 if uploaded_file is None:
     st.markdown(
@@ -401,7 +355,6 @@ if uploaded_file is not None:
             df_selected_date[metric].values) > 0 else 0
         difference = ((reflected - avg) / avg * 100) if avg != 0 else 0
         return avg, reflected, difference
-
 
     # Calculate metrics only if they exist in the dataframe
     metrics_to_calculate = [
@@ -579,6 +532,7 @@ if uploaded_file is not None:
                     va='bottom', color='#e7e7e7',
                     bbox=dict(boxstyle="round,pad=0.3", fc='#0f3460', ec=color, alpha=0.8, linewidth=1))
 
+
         # Premium styled legend
         legend = ax.legend(frameon=True, fontsize=11, loc='upper right')
         legend.get_frame().set_facecolor('#0f3460')
@@ -613,6 +567,7 @@ if uploaded_file is not None:
             percent_change = (y.iloc[-1] - y.iloc[0]) / y.iloc[0] * 100
             change_color = "#e74c3c" if percent_change < 0 else "#2ecc71"
             change_icon = "▼ " if percent_change < 0 else "▲ "
+
 
         # Premium layout spacing
         fig.tight_layout()
@@ -664,6 +619,7 @@ if uploaded_file is not None:
                         color='#e7e7e7', fontsize=14)
 
             st.pyplot(fig)
+
 
     # And for the Time Period Analysis section:
     st.markdown(f"""
@@ -740,8 +696,8 @@ if uploaded_file is not None:
 
                 # Format x-axis dates with better spacing
                 ax.set_xticks(df_last_30_days["Date"])
-                ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%b %d'), rotation=45, ha='right', fontsize=11,
-                                   color='black', fontweight='bold')
+                ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%b %d'), rotation=45, ha='right', fontsize=11, color='black', fontweight='bold')
+
 
                 # Enhanced spines with better visibility
                 for spine in ax.spines.values():
@@ -761,6 +717,8 @@ if uploaded_file is not None:
                     global_max = df[df["Employer"] == selected_employer][
                                      "Total Hours(Enrolled + Unenrolled)"].max() * 1.07
                     ax.set_ylim(bottom=global_min, top=global_max)
+
+
 
                 # Enhanced legend
                 ax.legend(frameon=True, fancybox=True, framealpha=0.9, fontsize=10, loc='upper right',
@@ -811,8 +769,7 @@ if uploaded_file is not None:
 
                     # Format x-axis dates with better labels
                     ax.set_xticks(df_last_30_days["Date"])
-                    ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%b %d'), rotation=45, ha='right',
-                                       fontsize=11, color='black', fontweight='bold')
+                    ax.set_xticklabels(df_last_30_days["Date"].dt.strftime('%b %d'), rotation=45, ha='right', fontsize=11, color='black', fontweight='bold')
                     # Improve axis label visibility
                     ax.tick_params(axis='x', colors='black', labelsize=11)
                     ax.tick_params(axis='y', colors='black', labelsize=11)
@@ -829,6 +786,7 @@ if uploaded_file is not None:
                         global_min = df[df["Employer"] == selected_employer]["Enrolled Hours-Hourly"].min() * 0.93
                         global_max = df[df["Employer"] == selected_employer]["Enrolled Hours-Hourly"].max() * 1.07
                         ax.set_ylim(bottom=global_min, top=global_max)
+
 
                     # Enhanced legend
                     ax.legend(frameon=True, fancybox=True, framealpha=0.9, fontsize=10, loc='upper right',
@@ -1052,6 +1010,3 @@ if uploaded_file is not None:
                 </p>
             </div>
         """, unsafe_allow_html=True)
-
-# Continue tracking analytics until the end of your app
-# The stop_tracking is now inside our if statement above to show the dashboard when needed
