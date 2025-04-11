@@ -353,7 +353,8 @@ if uploaded_file is not None:
 
     # Ensure there are employers to select from
     if "Employer" in df.columns and not df["Employer"].empty:
-        selected_employer = st.sidebar.selectbox("Select Employer", df["Employer"].unique())
+        employer_options = ["Select All"] + sorted(df["Employer"].unique().tolist())
+        selected_employer = st.sidebar.selectbox("Select Employer", employer_options, index=0)
     else:
         st.error("No employer data found in the file")
         st.stop()
@@ -367,9 +368,18 @@ if uploaded_file is not None:
     )
 
     # Filter data based on selection
-    df_selected_date = df[(df["Employer"] == selected_employer) & (df["Date"] == pd.to_datetime(selected_date))]
     selected_weekday = pd.to_datetime(selected_date).weekday()
-    df_trend = df[(df["Employer"] == selected_employer) & (df["Date"].dt.weekday == selected_weekday)].copy()
+
+    if selected_employer == "Select All":
+        # For all employers
+        df_selected_date = df[df["Date"] == pd.to_datetime(selected_date)]
+        df_trend = df[df["Date"].dt.weekday == selected_weekday].copy()
+    else:
+        # For single employer
+        df_selected_date = df[(df["Employer"] == selected_employer) & (df["Date"] == pd.to_datetime(selected_date))]
+        df_trend = df[(df["Employer"] == selected_employer) & (df["Date"].dt.weekday == selected_weekday)].copy()
+
+    # Sort the trend data by date
     df_trend = df_trend.sort_values(by="Date")
 
     # Create a dataframe for the last 7 days data
@@ -389,10 +399,11 @@ if uploaded_file is not None:
     df_last_30_days = df_last_30_days.sort_values(by="Date")
 
     # Add premium dashboard header
+    header_employer = "All Employers" if selected_employer == "Select All" else selected_employer
     st.markdown(f"""
         <div style="background: linear-gradient(90deg, #0f3460, #e94560); padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
             <h1 style="text-align: center; color: white; margin: 0; font-size: 32px;">Hours Trend Analysis</h1>
-            <p style="text-align: center; color: white; margin: 5px 0 0 0; font-size: 18px;">{selected_employer} | {selected_date.strftime('%B %d, %Y')}</p>
+            <p style="text-align: center; color: white; margin: 5px 0 0 0; font-size: 18px;">{header_employer} | {selected_date.strftime('%B %d, %Y')}</p>
         </div>
     """, unsafe_allow_html=True)
 
@@ -402,11 +413,17 @@ if uploaded_file is not None:
         if metric not in df_trend.columns:
             return 0, 0, 0
 
-        avg = df_trend[metric].mean() if not df_trend.empty else 0
+        if selected_employer == "Select All":
+            # Calculate average across all employers
+            avg = df_trend.groupby("Date")[metric].sum().mean()
+            # Get current sum across all employers
+            reflected = df_selected_date[metric].sum()
+        else:
+            # Original single-employer calculation
+            avg = df_trend[metric].mean() if not df_trend.empty else 0
+            reflected = df_selected_date[metric].values[0] if not df_selected_date.empty and len(
+                df_selected_date[metric].values) > 0 else 0
 
-        reflected = df_selected_date[metric].values[
-            0] if metric in df_selected_date.columns and not df_selected_date.empty and len(
-            df_selected_date[metric].values) > 0 else 0
         difference = ((reflected - avg) / avg * 100) if avg != 0 else 0
         return avg, reflected, difference
 
@@ -468,21 +485,35 @@ if uploaded_file is not None:
 
     def display_summary(col, title, avg, reflected, difference, icon="📊"):
         """
-        Function to display a visually enhanced summary box with animations.
+        Enhanced function with three-tier color coding:
+        - Green for variance from 0% to -0.9%
+        - Yellow/Mustard for variance from -1% to -20%
+        - Red for variance more negative than -20%
         """
-        # Define colors and icons based on the difference value
-        if difference < 0:
-            bg_gradient = "linear-gradient(45deg, #ff7675, #d63031)"
-            text_color = "#ffffff"
-            icon_color = "#fab1a0"
-            diff_icon = "📉"
-        else:
+        # Determine colors based on difference thresholds
+        if difference > -1:  # Includes 0% to -0.9%
+            # Positive or slightly negative variance - Green
             bg_gradient = "linear-gradient(45deg, #55efc4, #00b894)"
             text_color = "#ffffff"
             icon_color = "#c6f6d5"
             diff_icon = "📈"
+        elif difference >= -20:
+            # Moderate negative variance - Yellow/Mustard
+            bg_gradient = "linear-gradient(45deg, #fdcb6e, #e17055)"
+            text_color = "#ffffff"
+            icon_color = "#ffeaa7"
+            diff_icon = "⚠️"
+        else:
+            # Severe negative variance - Red
+            bg_gradient = "linear-gradient(45deg, #ff7675, #d63031)"
+            text_color = "#ffffff"
+            icon_color = "#fab1a0"
+            diff_icon = "📉"
 
-        # Assign new icons for each summary box
+        # Add "All Employers" to title if selected
+        display_title = f"All {title}" if selected_employer == "Select All" else title
+
+        # Icon dictionary for different metrics
         icon_dict = {
             "Enrolled Hours": "⏱️",
             "Hourly Enrolled Users": "👨‍💼",
@@ -490,49 +521,51 @@ if uploaded_file is not None:
             "Employees in TA": "👥"
         }
 
-        # Use the title to determine the icon, default to 📊 if title is not in dictionary
         icon = icon_dict.get(title, "📊")
 
-        # Simplified HTML structure that will render properly in Streamlit
         html = f"""
-            <div style="background: {bg_gradient}; border-radius: 12px; padding: 20px; 
-                        text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
-                        height: 100%; color: {text_color};">
-                <div style="font-size: 2rem; margin-bottom: 10px; color: {icon_color};">{icon}</div>
-                <h3 style="margin: 0; font-weight: bold;">{title}</h3>
-                <div style="display: flex; justify-content: space-between; margin-top: 15px;">
-                    <div style="text-align: center; flex: 1;">
-                        <p style="margin: 0; font-size: 1.2rem; opacity: 0.8;">Average</p>
-                        <p style="margin: 5px 0; font-size: 1.5rem; font-weight: bold;">{avg:.1f}</p>
-                    </div>
-                    <div style="text-align: center; flex: 1;">
-                        <p style="margin: 0; font-size: 1.2rem; opacity: 0.8;">Current</p>
-                        <p style="margin: 5px 0; font-size: 2rem; font-weight: bold;">{reflected:.1f}</p>
-                    </div>
+        <div style="background: {bg_gradient}; border-radius: 12px; padding: 20px; 
+                    text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+                    height: 100%; color: {text_color};">
+            <div style="font-size: 2rem; margin-bottom: 10px; color: {icon_color};">{icon}</div>
+            <h3 style="margin: 0; font-weight: bold;">{display_title}</h3>
+            <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                <div style="text-align: center; flex: 1;">
+                    <p style="margin: 0; font-size: 1.2rem; opacity: 0.8;">Average</p>
+                    <p style="margin: 5px 0; font-size: 1.5rem; font-weight: bold;">{avg:.1f}</p>
                 </div>
-                <div style="background-color: rgba(255,255,255,0.2); border-radius: 30px; 
-                            padding: 8px 15px; margin-top: 15px; display: inline-block; font-size: 1.5rem;">
-                    <span style="font-weight: bold;">
-                        {diff_icon} {abs(difference):.1f}%
-                    </span>
+                <div style="text-align: center; flex: 1;">
+                    <p style="margin: 0; font-size: 1.2rem; opacity: 0.8;">Current</p>
+                    <p style="margin: 5px 0; font-size: 2rem; font-weight: bold;">{reflected:.1f}</p>
                 </div>
             </div>
+            <div style="background-color: rgba(255,255,255,0.2); border-radius: 30px; 
+                        padding: 8px 15px; margin-top: 15px; display: inline-block; font-size: 1.5rem;">
+                <span style="font-weight: bold;">
+                    {diff_icon} {difference:.1f}%
+                </span>
+            </div>
+        </div>
         """
-
-        # Render the HTML
         col.markdown(html, unsafe_allow_html=True)
 
 
-    # Display summaries dynamically across columns
-    for i, (title, (avg, reflected, difference)) in enumerate(metrics_results.items()):
-        display_summary(cols[i % len(cols)], title, avg, reflected, difference)
+    # Ensure metrics_results is properly populated
+    metrics_results = {}
+    for column_name, display_name in metrics_to_calculate:
+        if column_name in df.columns:
+            avg, reflected, difference = calculate_summary(column_name)
+            metrics_results[display_name] = (avg, reflected, difference)
 
-    # Premium styled graphs section
-    st.markdown(f"""
-            <h2 style='text-align: center; color: #e94560; font-weight: bold; margin: 30px 0 20px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);'>
-                Trend Analysis for {selected_employer}
-            </h2>
-        """, unsafe_allow_html=True)
+    # Create columns for displaying summary boxes
+    if metrics_results:  # Only create columns if we have data
+        cols = st.columns(min(4, len(metrics_results)))  # Create up to 4 columns
+
+        # Display summaries
+        for i, (title, (avg, reflected, difference)) in enumerate(metrics_results.items()):
+            display_summary(cols[i % len(cols)], title, avg, reflected, difference)
+    else:
+        st.warning("No metrics data available to display")
 
 
     def plot_trend(ax, x, y, title, xlabel, ylabel, color, marker):
@@ -648,20 +681,30 @@ if uploaded_file is not None:
         position = positions[i % len(positions)]
 
         with position:
-            # Create a premium container for each chart
+            chart_title = f"All Employers {title}" if selected_employer == "Select All" else f"{title} for {selected_employer}"
+
             st.markdown(f"""
-                    <div style="padding: 10px; border-radius: 10px; background-color: rgba(15, 52, 96, 0.7); border: 1px solid {color}; margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 10px 0; color: {color}; text-align: center;">{title}</h4>
-                    </div>
-                """, unsafe_allow_html=True)
+                <div style="padding: 10px; border-radius: 10px; background-color: rgba(15, 52, 96, 0.7); border: 1px solid {color}; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: {color}; text-align: center;">{chart_title}</h4>
+                </div>
+            """, unsafe_allow_html=True)
 
             fig, ax = plt.subplots(figsize=(12, 6))
             if not df_trend.empty and metric in df_trend.columns:
+                if selected_employer == "Select All":
+                    # Group by date and sum for all employers
+                    df_grouped = df_trend.groupby("Date")[metric].sum().reset_index()
+                    plot_data = df_grouped[metric]
+                    dates = df_grouped["Date"]
+                else:
+                    plot_data = df_trend[metric]
+                    dates = df_trend["Date"]
+
                 plot_trend(
                     ax,
-                    df_trend["Date"],
-                    df_trend[metric],
-                    f"{title} for {selected_employer}",
+                    dates,
+                    plot_data,
+                    chart_title,
                     "Date",
                     metric.replace("_", " "),
                     color,
@@ -933,134 +976,135 @@ if uploaded_file is not None:
             else:
                 st.info("Please upload a CSV file to start.")
 # Add a premium section header for the trend data table with more spacing
-st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)  # Add space before the section
+st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
 
 # Check if a file has been uploaded before trying to use selected_employer
 if uploaded_file is not None:
-    st.markdown(f"""
-        <h2 class="section-header" style='text-align: center; font-weight: bold;'>
-            Historical Trend Data for {selected_employer}
-        </h2>
-    """, unsafe_allow_html=True)
+    # Only show this section if a specific employer is selected (not "Select All")
+    if selected_employer != "Select All":
+        st.markdown(f"""
+            <h2 class="section-header" style='text-align: center; font-weight: bold;'>
+                Historical Trend Data for {selected_employer}
+            </h2>
+        """, unsafe_allow_html=True)
 
-    # Display trend data with enhanced styling and download option
-    if df_trend.empty:
-        st.warning("No trend data found for previous same weekdays.")
-    else:
-        # Create a container for better spacing and organization
-        with st.container():
+        # Display trend data with enhanced styling and download option
+        if df_trend.empty:
+            st.warning("No trend data found for previous same weekdays.")
+        else:
+            # Create a container for better spacing and organization
+            with st.container():
+                with col1:
+                    st.markdown("""
+                    <h3 style="margin-top: 10px; margin-bottom: 5px; color: #e94560;">Complete Trend Analysis Dataset</h3>
+                """, unsafe_allow_html=True)
 
-            with col1:
-                st.markdown("""
-                <h3 style="margin-top: 10px; margin-bottom: 5px; color: #e94560;">Complete Trend Analysis Dataset</h3>
-            """, unsafe_allow_html=True)
+                with col2:
+                    # Generate CSV download button with improved styling
+                    csv = df_trend.to_csv(index=False)
+                    st.markdown("""
+                        <style>
+                        /* Custom styling for the download button */
+                        div[data-testid="stDownloadButton"] button {
+                            background-color: #0a2040 !important;
+                            color: #FFFF00 !important;
+                            border: 2px solid #e94560 !important;
+                            padding: 10px !important;
+                            font-weight: 800 !important;
+                            font-size: 16px !important;
+                            border-radius: 8px !important;
+                            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
+                            text-shadow: 1px 1px 2px #000000 !important;
+                            transition: all 0.3s ease !important;
+                            width: 100% !important;
+                            margin-top: 10px !important;
+                        }
+                        div[data-testid="stDownloadButton"] button:hover {
+                            background-color: #e94560 !important;
+                            color: #FFFFFF !important;
+                            border-color: #0a2040 !important;
+                            transform: translateY(-2px) !important;
+                            box-shadow: 0 6px 15px rgba(233, 69, 96, 0.4) !important;
+                        }
+                        div[data-testid="stDownloadButton"] svg {
+                            margin-right: 5px !important;
+                            fill: #FFFF00 !important;
+                        }
+                        div[data-testid="stDownloadButton"] p {
+                            color: #FFFF00 !important;
+                        }
+                        </style>
+                    """, unsafe_allow_html=True)
 
-        with col2:
-            # Generate CSV download button with improved styling
-            csv = df_trend.to_csv(index=False)
+                    st.download_button(
+                        label="📥 Download Data",
+                        data=csv,
+                        file_name=f"{selected_employer}_trend_data.csv",
+                        mime="text/csv",
+                        key="download-csv",
+                        help="Download the complete trend dataset as CSV",
+                        use_container_width=True,
+                    )
+
+            # Add premium styling for the table
             st.markdown("""
                 <style>
-                /* Custom styling for the download button */
-                div[data-testid="stDownloadButton"] button {
-                    background-color: #0a2040 !important;
-                    color: #FFFF00 !important; /* Bright yellow text for maximum contrast */
-                    border: 2px solid #e94560 !important;
-                    padding: 10px !important;
-                    font-weight: 800 !important;
-                    font-size: 16px !important;
-                    border-radius: 8px !important;
-                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
-                    text-shadow: 1px 1px 2px #000000 !important;
-                    transition: all 0.3s ease !important;
-                    width: 100% !important;
-                    margin-top: 10px !important;
+                .trend-table {
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                    font-size: 0.9em;
+                    font-family: 'DejaVu Sans', sans-serif;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+                    border-radius: 12px;
+                    overflow: hidden;
+                    width: 100%;
                 }
-                div[data-testid="stDownloadButton"] button:hover {
-                    background-color: #e94560 !important;
-                    color: #FFFFFF !important;
-                    border-color: #0a2040 !important;
-                    transform: translateY(-2px) !important;
-                    box-shadow: 0 6px 15px rgba(233, 69, 96, 0.4) !important;
+                .trend-table thead tr {
+                    background: linear-gradient(90deg, #0f3460, #e94560);
+                    color: #fff;
+                    text-align: center;
+                    font-weight: bold;
                 }
-                div[data-testid="stDownloadButton"] svg {
-                    margin-right: 5px !important;
-                    fill: #FFFF00 !important; /* Match the text color */
+                .trend-table th, .trend-table td {
+                    padding: 12px 15px;
+                    text-align: center;
                 }
-                div[data-testid="stDownloadButton"] p {
-                    color: #FFFF00 !important; /* Also style any text within the button */
+                .trend-table tbody tr {
+                    border-bottom: 1px solid rgba(15, 52, 96, 0.1);
+                    background-color: rgba(15, 52, 96, 0.05);
+                }
+                .trend-table tbody tr:nth-of-type(even) {
+                    background-color: rgba(15, 52, 96, 0.1);
+                }
+                .trend-table tbody tr:hover {
+                    background-color: rgba(233, 69, 96, 0.1);
+                    transition: all 0.3s ease;
+                }
+                .trend-table tbody tr:last-of-type {
+                    border-bottom: 3px solid #e94560;
                 }
                 </style>
             """, unsafe_allow_html=True)
 
-            st.download_button(
-                label="📥 Download Data",
-                data=csv,
-                file_name=f"{selected_employer}_trend_data.csv",
-                mime="text/csv",
-                key="download-csv",
-                help="Download the complete trend dataset as CSV",
-                use_container_width=True,
-            )
+            # Convert the DataFrame to an HTML table with custom styling
+            html_table = df_trend.to_html(classes="trend-table", escape=False, index=False)
+            st.markdown(html_table, unsafe_allow_html=True)
 
-        # Add premium styling for the table
-        st.markdown("""
-            <style>
-            .trend-table {
-                border-collapse: collapse;
-                margin: 20px 0;
-                font-size: 0.9em;
-                font-family: 'DejaVu Sans', sans-serif;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-                border-radius: 12px;
-                overflow: hidden;
-                width: 100%;
-            }
-            .trend-table thead tr {
-                background: linear-gradient(90deg, #0f3460, #e94560);
-                color: #fff;
-                text-align: center;
-                font-weight: bold;
-            }
-            .trend-table th, .trend-table td {
-                padding: 12px 15px;
-                text-align: center;
-            }
-            .trend-table tbody tr {
-                border-bottom: 1px solid rgba(15, 52, 96, 0.1);
-                background-color: rgba(15, 52, 96, 0.05);
-            }
-            .trend-table tbody tr:nth-of-type(even) {
-                background-color: rgba(15, 52, 96, 0.1);
-            }
-            .trend-table tbody tr:hover {
-                background-color: rgba(233, 69, 96, 0.1);
-                transition: all 0.3s ease;
-            }
-            .trend-table tbody tr:last-of-type {
-                border-bottom: 3px solid #e94560;
-            }
-            </style>
-        """, unsafe_allow_html=True)
-
-        # Convert the DataFrame to an HTML table with custom styling
-        html_table = df_trend.to_html(classes="trend-table", escape=False, index=False)
-        st.markdown(html_table, unsafe_allow_html=True)
-
-        # Add info card below the table
-        st.markdown("""
-            <div style="
-                padding: 15px; 
-                border-radius: 12px; 
-                background: linear-gradient(135deg, rgba(15, 52, 96, 0.85), rgba(233, 69, 96, 0.85)); 
-                border: 2px solid #e94560; 
-                margin-top: 20px;
-                margin-bottom: 30px;
-                box-shadow: 2px 2px 10px rgba(233, 69, 96, 0.3);
-                text-align: center;
-            ">
-                <p style="color: white; margin: 0; font-size: 16px;">
-                    <span style="font-size: 20px;">ℹ️</span> 
-                    This table displays historical data for the same weekday, providing context for trend analysis
-                </p>
-            </div>
-        """, unsafe_allow_html=True)
+            # Add info card below the table
+            st.markdown("""
+                <div style="
+                    padding: 15px; 
+                    border-radius: 12px; 
+                    background: linear-gradient(135deg, rgba(15, 52, 96, 0.85), rgba(233, 69, 96, 0.85)); 
+                    border: 2px solid #e94560; 
+                    margin-top: 20px;
+                    margin-bottom: 30px;
+                    box-shadow: 2px 2px 10px rgba(233, 69, 96, 0.3);
+                    text-align: center;
+                ">
+                    <p style="color: white; margin: 0; font-size: 16px;">
+                        <span style="font-size: 20px;">ℹ️</span> 
+                        This table displays historical data for the same weekday, providing context for trend analysis
+                    </p>
+                </div>
+            """, unsafe_allow_html=True)
